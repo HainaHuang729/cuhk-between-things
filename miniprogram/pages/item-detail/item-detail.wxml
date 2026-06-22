@@ -32,7 +32,7 @@
 
   <view class="card contact-panel">
     <view class="section-title">联系卖家</view>
-    <view wx:if="{{contact.wechat_id}}">
+    <view wx:if="{{canViewContact && contact.wechat_id}}">
       <view class="muted">微信号</view>
       <view class="wechat-id">{{contact.wechat_id}}</view>
       <view class="primary-button" bindtap="copyWechat">复制微信号</view>

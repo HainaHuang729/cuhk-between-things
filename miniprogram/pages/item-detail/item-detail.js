@@ -1,9 +1,10 @@
+const { logContactView } = require("../../services/contact-service");
 const {
-  getCurrentUser,
   getItem,
   isItemOwner,
   markItemStatus
 } = require("../../services/item-service");
+const { canViewContact } = require("../../services/user-service");
 
 function buildShareText(item) {
   return [
@@ -20,7 +21,7 @@ Page({
     id: "",
     item: {},
     contact: {},
-    isLoggedIn: false,
+    canViewContact: false,
     isOwner: false,
     imageError: false
   },
@@ -53,16 +54,25 @@ Page({
   },
 
   loadContact() {
-    const user = getCurrentUser();
+    const allowed = canViewContact();
     const item = this.data.item.id ? this.data.item : getItem(this.data.id);
     this.setData({
-      isLoggedIn: Boolean(user),
-      contact: user && item ? { wechat_id: item.wechat_id || user.wechat_id } : {}
+      canViewContact: allowed,
+      contact: allowed && item ? { wechat_id: item.wechat_id || "" } : {}
     });
   },
 
   copyWechat() {
-    wx.setClipboardData({ data: this.data.contact.wechat_id });
+    const wechatId = this.data.contact.wechat_id;
+    if (!wechatId) {
+      wx.showToast({ title: "登录后查看联系方式", icon: "none" });
+      return;
+    }
+
+    wx.setClipboardData({
+      data: wechatId,
+      success: () => logContactView(this.data.id, this.data.item.owner_id)
+    });
   },
 
   goLogin() {

@@ -1,4 +1,4 @@
-const { getMockUser, mockLogout } = require("../../utils/mock-store");
+const { getCurrentUser, mockLogout } = require("../../services/user-service");
 
 Page({
   data: {
@@ -6,7 +6,7 @@ Page({
   },
 
   onShow() {
-    this.setData({ user: getMockUser() || {} });
+    this.setData({ user: getCurrentUser() || {} });
   },
 
   goLogin() {

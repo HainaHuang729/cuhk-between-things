@@ -27,9 +27,12 @@ API_BASE_URL: "http://localhost:3000/api"
 当前小程序运行在 local mock mode：
 
 - 商品页面统一调用 `miniprogram/services/item-service.js`。
-- `item-service.js` 内部暂时使用 `miniprogram/utils/mock-store.js` 读写本地 mock 数据。
+- 用户登录、退出和联系权限统一调用 `miniprogram/services/user-service.js`。
+- 复制联系方式时通过 `miniprogram/services/contact-service.js` 记录本地联系日志。
+- `item-service.js`、`user-service.js` 和 `contact-service.js` 暂时都运行在 mock mode。
+- `item-service.js` 和 `user-service.js` 内部暂时使用 `miniprogram/utils/mock-store.js` 读写本地 mock 数据。
 - `mock-store.js` 作为 dev/mock 数据源保留，便于离线演示首页浏览、详情查看、发布、编辑、下架和标记已售。
-- 后续接入 Supabase 时，优先替换 `item-service.js` 的内部实现，页面层不需要直接改为调用 Supabase。
+- 后续接入 Supabase 时，优先替换 services 内部实现，页面层不需要直接改为调用 Supabase。
 
 ## Web/API
 

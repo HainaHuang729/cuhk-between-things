@@ -2,10 +2,10 @@ const {
   categories,
   conditions,
   createItem,
-  getCurrentUser,
   getItem,
   updateItem
 } = require("../../services/item-service");
+const { getCurrentUser } = require("../../services/user-service");
 
 Page({
   data: {

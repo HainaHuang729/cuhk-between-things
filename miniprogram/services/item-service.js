@@ -24,10 +24,6 @@ function deleteItem(id) {
   return markItemStatus(id, "off_shelf");
 }
 
-function getCurrentUser() {
-  return mockStore.getMockUser();
-}
-
 function isItemOwner(item) {
   return mockStore.isItemOwner(item);
 }
@@ -38,7 +34,6 @@ module.exports = {
   itemStatuses: mockStore.itemStatuses,
   createItem,
   deleteItem,
-  getCurrentUser,
   getItem,
   isItemOwner,
   listItems,

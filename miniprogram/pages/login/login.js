@@ -1,4 +1,4 @@
-const { mockLogin } = require("../../utils/mock-store");
+const { mockLogin } = require("../../services/user-service");
 
 Page({
   data: {
