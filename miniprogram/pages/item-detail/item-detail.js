@@ -71,7 +71,7 @@ Page({
 
     wx.setClipboardData({
       data: wechatId,
-      success: () => logContactView(this.data.id, this.data.item.owner_id)
+      success: () => logContactView(this.data.id, this.data.item.seller_id)
     });
   },
 

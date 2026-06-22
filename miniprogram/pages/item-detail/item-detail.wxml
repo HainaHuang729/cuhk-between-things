@@ -15,6 +15,7 @@
       <view class="detail-status status-{{item.status}}">{{item.status_label}}</view>
     </view>
     <view class="price">{{item.price}}元</view>
+    <view class="seller-line">发布者 {{item.seller_name}}</view>
     <view class="muted">{{item.category_label}} · {{item.condition_label}} · {{item.dormitory}}</view>
     <view class="muted">{{item.handover_location}}</view>
   </view>

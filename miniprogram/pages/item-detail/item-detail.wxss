@@ -37,6 +37,13 @@
   font-weight: 800;
 }
 
+.seller-line {
+  margin-top: 8rpx;
+  color: #1f2933;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
 .status-reserved {
   background: rgba(255, 140, 0, 0.92);
 }

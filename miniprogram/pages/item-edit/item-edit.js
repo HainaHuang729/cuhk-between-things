@@ -93,6 +93,12 @@ Page({
     }
 
     const user = getCurrentUser();
+    if (!user) {
+      wx.showToast({ title: "请先登录", icon: "none" });
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+
     const payload = {
       title: values.title.trim(),
       price: Number(values.price),

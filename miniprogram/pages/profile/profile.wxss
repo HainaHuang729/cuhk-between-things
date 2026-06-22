@@ -1,1 +1,78 @@
-/* Page styles are inherited from app.wxss. */
+.profile-card {
+  margin-top: 20rpx;
+}
+
+.profile-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+  margin: 18rpx 0;
+}
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin-bottom: 14rpx;
+  padding: 18rpx;
+  border: 1rpx solid #e2e5e9;
+  border-radius: 16rpx;
+  background: #ffffff;
+}
+
+.profile-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-item-title {
+  overflow: hidden;
+  color: #1f2933;
+  font-size: 28rpx;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-item-side {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.profile-price {
+  color: #6F2C91;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.profile-status {
+  display: inline-block;
+  margin-top: 8rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 999rpx;
+  background: rgba(111, 44, 145, 0.9);
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.status-reserved {
+  background: rgba(255, 140, 0, 0.92);
+}
+
+.status-sold,
+.status-off_shelf {
+  background: rgba(31, 41, 51, 0.76);
+}
+
+.empty-box {
+  margin-bottom: 16rpx;
+  padding: 28rpx;
+  border: 1rpx solid #e2e5e9;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #697386;
+  font-size: 26rpx;
+  text-align: center;
+}
