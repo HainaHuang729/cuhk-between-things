@@ -1,5 +1,26 @@
 const { request } = require("../../utils/request");
 
+const previewGroups = {
+  "mock-group-1": {
+    title: "Costco纸巾",
+    current_size: 4,
+    target_size: 6,
+    source_platform: "Costco",
+    dormitory: "56座",
+    handover_location: "伍宜孙56座大堂",
+    description: "凑一箱纸巾，到货后宿舍楼下分。"
+  },
+  "mock-group-2": {
+    title: "IKEA拼车",
+    current_size: 2,
+    target_size: 4,
+    source_platform: "IKEA",
+    dormitory: "23座",
+    handover_location: "23座门口",
+    description: "周末去 IKEA，凑车费。"
+  }
+};
+
 Page({
   data: {
     id: "",
@@ -14,6 +35,11 @@ Page({
   },
 
   async loadGroup(id) {
+    if (previewGroups[id]) {
+      this.setData({ group: previewGroups[id] });
+      return;
+    }
+
     try {
       const res = await request({ url: `/groups/${id}` });
       this.setData({ group: res.data || {} });

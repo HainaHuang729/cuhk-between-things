@@ -1,5 +1,44 @@
 const { request } = require("../../utils/request");
 
+const previewItems = {
+  "mock-item-1": {
+    title: "Dell 27寸显示器",
+    price: 500,
+    category: "电子产品",
+    condition: "良好",
+    dormitory: "56座",
+    handover_location: "伍宜孙56座大堂",
+    description: "状态良好，含 HDMI 线。"
+  },
+  "mock-item-2": {
+    title: "IKEA椅子",
+    price: 80,
+    category: "家具",
+    condition: "可用",
+    dormitory: "23座",
+    handover_location: "23座门口",
+    description: "搬宿出，轻微使用痕迹。"
+  },
+  "mock-item-3": {
+    title: "宿舍台灯",
+    price: 40,
+    category: "宿舍用品",
+    condition: "良好",
+    dormitory: "39座",
+    handover_location: "楼下",
+    description: "亮度稳定，可直接使用。"
+  },
+  "mock-item-4": {
+    title: "小冰箱",
+    price: 280,
+    category: "宿舍用品",
+    condition: "可用",
+    dormitory: "研究生宿舍",
+    handover_location: "大堂",
+    description: "适合宿舍使用，需自取。"
+  }
+};
+
 Page({
   data: {
     id: "",
@@ -14,6 +53,11 @@ Page({
   },
 
   async loadItem(id) {
+    if (previewItems[id]) {
+      this.setData({ item: previewItems[id] });
+      return;
+    }
+
     try {
       const res = await request({ url: `/items/${id}` });
       this.setData({ item: res.data || {} });

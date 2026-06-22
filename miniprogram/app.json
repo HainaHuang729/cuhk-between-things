@@ -10,10 +10,10 @@
     "pages/report/report"
   ],
   "window": {
-    "navigationBarTitleText": "CUHK Marketplace",
-    "navigationBarBackgroundColor": "#F7F7F4",
+    "navigationBarTitleText": "",
+    "navigationBarBackgroundColor": "#FAF9FC",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F7F7F4"
+    "backgroundColor": "#FAF9FC"
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",

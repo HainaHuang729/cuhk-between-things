@@ -1,47 +1,51 @@
 <view class="page">
-  <view class="top-title">校园交易与资源共享社区</view>
-  <input class="search" placeholder="搜索商品、拼团、宿舍" bindinput="onSearchInput" confirm-type="search" bindconfirm="loadFeed" />
-
-  <view class="segmented">
-    <view class="segmented-item {{activeType === 'all' ? 'active' : ''}}" data-type="all" bindtap="setType">全部</view>
-    <view class="segmented-item {{activeType === 'items' ? 'active' : ''}}" data-type="items" bindtap="setType">二手</view>
-    <view class="segmented-item {{activeType === 'groups' ? 'active' : ''}}" data-type="groups" bindtap="setType">拼团</view>
-  </view>
-
-  <scroll-view class="filter-row" scroll-x>
-    <view class="chip">宿舍</view>
-    <view class="chip">书院</view>
-    <view class="chip">分类</view>
-    <view class="chip">最新发布</view>
-  </scroll-view>
-
-  <view wx:if="{{activeType !== 'groups'}}">
-    <view class="section-title">最新商品</view>
-    <view wx:for="{{items}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="goItem">
-      <view class="card-row">
-        <view class="thumb"></view>
-        <view class="card-main">
-          <view class="card-title">{{item.title}}</view>
-          <view class="price">HKD {{item.price}}</view>
-          <view class="muted">{{item.dormitory}} · {{item.handover_location}}</view>
-          <view class="badge">{{item.status_label || '在售'}}</view>
+  <view class="market-grid" wx:if="{{activeType === 'items'}}">
+    <view wx:for="{{items}}" wx:key="id" class="market-tile" data-id="{{item.id}}" bindtap="goItem">
+      <view class="tile-photo">
+        <image wx:if="{{item.cover_image_url}}" src="{{item.cover_image_url}}" mode="aspectFill"></image>
+        <view wx:else class="tile-fallback"></view>
+      </view>
+      <view class="tile-info">
+        <view class="tile-title">{{item.title}}</view>
+        <view class="tile-bottom">
+          <text class="tile-price">HKD {{item.price}}</text>
+          <text class="tile-loc">{{item.dormitory}}</text>
         </view>
       </view>
     </view>
   </view>
 
-  <view wx:if="{{activeType !== 'items'}}">
-    <view class="section-title">最新拼团</view>
-    <view wx:for="{{groups}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="goGroup">
-      <view class="card-title">{{item.title}}</view>
-      <view class="price">当前 {{item.current_size}}/{{item.target_size}}</view>
-      <view class="muted">{{item.source_platform}} · {{item.dormitory}}</view>
+  <view class="market-grid" wx:if="{{activeType === 'wanted'}}">
+    <view wx:for="{{wantedItems}}" wx:key="id" class="market-tile wanted-tile">
+      <view class="tile-photo wanted-photo"></view>
+      <view class="tile-info">
+        <view class="tile-title">{{item.title}}</view>
+        <view class="tile-bottom">
+          <text class="tile-price">{{item.budget}}</text>
+          <text class="tile-loc">{{item.dormitory}}</text>
+        </view>
+      </view>
     </view>
   </view>
 
-  <view class="actions">
-    <view class="secondary-button" bindtap="goProfile">我的</view>
-    <view class="primary-button" bindtap="goNewItem">发布商品</view>
-    <view class="primary-button" bindtap="goNewGroup">发起拼团</view>
+  <view class="market-grid" wx:if="{{activeType === 'groups'}}">
+    <view wx:for="{{groups}}" wx:key="id" class="market-tile group-tile" data-id="{{item.id}}" bindtap="goGroup">
+      <view class="tile-photo group-photo">
+        <view class="group-count">{{item.current_size}}/{{item.target_size}}</view>
+      </view>
+      <view class="tile-info">
+        <view class="tile-title">{{item.title}}</view>
+        <view class="tile-bottom">
+          <text class="tile-price">{{item.source_platform}}</text>
+          <text class="tile-loc">{{item.dormitory}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-tabs">
+    <view class="bottom-tab {{activeType === 'items' ? 'active' : ''}}" data-type="items" bindtap="setType">二手</view>
+    <view class="bottom-tab {{activeType === 'wanted' ? 'active' : ''}}" data-type="wanted" bindtap="setType">求购</view>
+    <view class="bottom-tab {{activeType === 'groups' ? 'active' : ''}}" data-type="groups" bindtap="setType">拼团</view>
   </view>
 </view>

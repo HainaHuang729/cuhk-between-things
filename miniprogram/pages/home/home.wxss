@@ -1,1 +1,135 @@
-/* Page styles are inherited from app.wxss. */
+.page {
+  min-height: 100vh;
+  padding: 18rpx 18rpx 132rpx;
+  background: #faf9fc;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+.market-tile {
+  position: relative;
+  height: 350rpx;
+  overflow: hidden;
+  border-radius: 14rpx;
+  background: #ffffff;
+  box-shadow: 0 6rpx 18rpx rgba(65, 30, 103, 0.08);
+}
+
+.tile-photo {
+  position: absolute;
+  inset: 0;
+  background: #eee9f5;
+}
+
+.tile-photo image {
+  width: 100%;
+  height: 100%;
+}
+
+.tile-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #eee9f5 0%, #d9c8ec 100%);
+}
+
+.wanted-photo {
+  background: linear-gradient(135deg, #6F2C91 0%, #8A4DB3 100%);
+}
+
+.group-photo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFCC33 0%, #ffdc63 100%);
+}
+
+.group-count {
+  color: #6F2C91;
+  font-size: 48rpx;
+  font-weight: 900;
+}
+
+.tile-info {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 54rpx 16rpx 14rpx;
+  background: linear-gradient(180deg, rgba(31, 16, 48, 0) 0%, rgba(31, 16, 48, 0.78) 58%, rgba(31, 16, 48, 0.92) 100%);
+  color: #ffffff;
+}
+
+.wanted-tile .tile-info {
+  background: linear-gradient(180deg, rgba(75, 36, 122, 0) 0%, rgba(75, 36, 122, 0.82) 62%, rgba(75, 36, 122, 0.94) 100%);
+}
+
+.tile-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.tile-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10rpx;
+  margin-top: 8rpx;
+}
+
+.tile-price {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #FFCC33;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.tile-loc {
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 22rpx;
+}
+
+.bottom-tabs {
+  position: fixed;
+  right: 24rpx;
+  bottom: 26rpx;
+  left: 24rpx;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8rpx;
+  padding: 8rpx;
+  border: 1rpx solid rgba(75, 36, 122, 0.14);
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 16rpx 40rpx rgba(65, 30, 103, 0.18);
+}
+
+.bottom-tab {
+  height: 72rpx;
+  border-radius: 12rpx;
+  color: #6F2C91;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 72rpx;
+  text-align: center;
+}
+
+.bottom-tab.active {
+  background: #6F2C91;
+  color: #FFCC33;
+}
