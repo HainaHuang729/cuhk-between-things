@@ -2,7 +2,7 @@
   <view class="top-title">{{isEdit ? '编辑商品' : '发布商品'}}</view>
   <form class="form" bindsubmit="submit">
     <input class="field" name="title" value="{{form.title}}" data-field="title" bindinput="onFieldInput" placeholder="标题，例如 Dell 27寸显示器" />
-    <input class="field" name="price" value="{{form.price}}" data-field="price" bindinput="onFieldInput" type="digit" placeholder="价格 元" />
+    <input class="field" name="price" value="{{form.price}}" data-field="price" bindinput="onFieldInput" type="digit" placeholder="价格 元，只填数字" />
     <picker mode="selector" range="{{categories}}" range-key="label" bindchange="onCategoryChange">
       <view class="field">{{categoryLabel}}</view>
     </picker>
@@ -14,7 +14,7 @@
     <view class="upload-row" wx:if="{{images.length}}">
       <image wx:for="{{images}}" wx:key="*this" class="upload-preview" src="{{item}}" mode="aspectFill"></image>
     </view>
-    <view class="secondary-button" bindtap="chooseImages">上传图片</view>
+    <view class="secondary-button" bindtap="chooseImages">上传图片 {{images.length}}/9</view>
     <button class="primary-button" loading="{{submitting}}" disabled="{{submitting}}" form-type="submit">{{isEdit ? '保存' : '提交'}}</button>
   </form>
 </view>

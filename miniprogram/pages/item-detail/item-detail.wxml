@@ -1,5 +1,5 @@
 <view class="page">
-  <view class="detail-image">
+  <view class="detail-image" bindtap="previewImages">
     <image
       wx:if="{{item.cover_image_url && !imageError}}"
       src="{{item.cover_image_url}}"

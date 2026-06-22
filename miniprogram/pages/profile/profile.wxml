@@ -24,6 +24,7 @@
       wx:for="{{myItems}}"
       wx:key="id"
       class="profile-item"
+      hover-class="profile-item-hover"
       data-id="{{item.id}}"
       bindtap="goItem"
     >
@@ -43,6 +44,7 @@
       wx:for="{{contactedItems}}"
       wx:key="id"
       class="profile-item"
+      hover-class="profile-item-hover"
       data-id="{{item.id}}"
       bindtap="goItem"
     >

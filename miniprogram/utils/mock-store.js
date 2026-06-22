@@ -184,9 +184,15 @@ function writeItems(items) {
   wx.setStorageSync(ITEMS_KEY, items);
 }
 
+function sortItemsByLatest(items) {
+  return items.slice().sort((a, b) => (
+    new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+  ));
+}
+
 function getItems(q) {
   const keyword = (q || "").trim().toLowerCase();
-  const items = readItems();
+  const items = sortItemsByLatest(readItems());
 
   if (!keyword) return items;
 

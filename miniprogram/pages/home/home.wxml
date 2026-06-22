@@ -1,13 +1,16 @@
 <view class="page">
   <view class="search-wrap">
-    <input
-      class="search-input"
-      placeholder="搜索商品"
-      value="{{q}}"
-      confirm-type="search"
-      bindinput="onSearchInput"
-      bindconfirm="loadFeed"
-    />
+    <view class="search-box">
+      <input
+        class="search-input"
+        placeholder="搜索商品"
+        value="{{q}}"
+        confirm-type="search"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+      />
+      <view wx:if="{{q}}" class="search-clear" bindtap="clearSearch">×</view>
+    </view>
   </view>
 
   <view wx:if="{{loading}}" class="loading-state">加载中</view>
@@ -18,7 +21,14 @@
   </view>
 
   <view wx:else class="market-grid">
-    <view wx:for="{{items}}" wx:key="id" class="item-card" data-id="{{item.id}}" bindtap="goItem">
+    <view
+      wx:for="{{items}}"
+      wx:key="id"
+      class="item-card"
+      hover-class="item-card-hover"
+      data-id="{{item.id}}"
+      bindtap="goItem"
+    >
       <view class="item-photo">
         <image
           wx:if="{{item.cover_image_url && !item.image_error}}"

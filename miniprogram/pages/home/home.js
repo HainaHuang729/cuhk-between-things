@@ -16,7 +16,8 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.loadFeed().finally(() => wx.stopPullDownRefresh());
+    this.loadFeed({ showLoading: false });
+    wx.stopPullDownRefresh();
   },
 
   onSearchInput(event) {
@@ -24,8 +25,20 @@ Page({
     this.setData({ q, items: listItems({ q }) });
   },
 
-  loadFeed() {
-    this.setData({ loading: true });
+  onSearchConfirm() {
+    const q = this.data.q.trim();
+    this.setData({ q, items: listItems({ q }) });
+  },
+
+  clearSearch() {
+    this.setData({ q: "", items: listItems() });
+  },
+
+  loadFeed(options = {}) {
+    if (options.showLoading !== false) {
+      this.setData({ loading: true });
+    }
+
     this.setData({
       items: listItems({ q: this.data.q }),
       loading: false

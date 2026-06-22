@@ -66,5 +66,6 @@ Page({
       myItems: [],
       user: {}
     });
+    wx.showToast({ title: "已退出", icon: "none" });
   }
 });

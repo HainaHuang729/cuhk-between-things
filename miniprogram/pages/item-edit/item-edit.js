@@ -7,6 +7,30 @@ const {
 } = require("../../services/item-service");
 const { getCurrentUser } = require("../../services/user-service");
 
+const MAX_IMAGES = 9;
+
+function validateForm(values) {
+  const title = (values.title || "").trim();
+  const priceText = String(values.price || "").trim();
+  const handoverLocation = (values.handover_location || "").trim();
+  const description = (values.description || "").trim();
+
+  if (!title) return { error: "请填写商品标题" };
+  if (!priceText) return { error: "请填写价格" };
+  if (!/^\d+(\.\d{1,2})?$/.test(priceText)) return { error: "价格只能填写数字" };
+  if (Number(priceText) <= 0) return { error: "价格需大于0" };
+  if (!handoverLocation) return { error: "请填写交收地点" };
+
+  return {
+    data: {
+      description,
+      handover_location: handoverLocation,
+      price: Number(priceText),
+      title
+    }
+  };
+}
+
 Page({
   data: {
     categories,
@@ -28,6 +52,7 @@ Page({
   },
 
   onLoad(options) {
+    this.ensureLoggedIn();
     if (!options.id) return;
 
     const item = getItem(options.id);
@@ -71,12 +96,27 @@ Page({
     this.setData({ [`form.${field}`]: event.detail.value });
   },
 
+  ensureLoggedIn() {
+    if (getCurrentUser()) return true;
+
+    wx.showToast({ title: "请先登录后发布", icon: "none" });
+    wx.navigateTo({ url: "/pages/login/login" });
+    return false;
+  },
+
   chooseImages() {
+    const remaining = MAX_IMAGES - this.data.images.length;
+    if (remaining <= 0) {
+      wx.showToast({ title: "最多上传9张图片", icon: "none" });
+      return;
+    }
+
     wx.chooseMedia({
-      count: 9,
+      count: remaining,
       mediaType: ["image"],
       success: (res) => {
-        const images = res.tempFiles.map((file) => file.tempFilePath);
+        const picked = res.tempFiles.map((file) => file.tempFilePath);
+        const images = this.data.images.concat(picked).slice(0, MAX_IMAGES);
         this.setData({ images });
       }
     });
@@ -86,29 +126,26 @@ Page({
     if (this.data.submitting) return;
 
     const values = event.detail.value;
-
-    if (!values.title || !values.price || !values.handover_location) {
-      wx.showToast({ title: "标题、价格、地点必填", icon: "none" });
+    const validated = validateForm(values);
+    if (validated.error) {
+      wx.showToast({ title: validated.error, icon: "none" });
       return;
     }
 
+    if (!this.ensureLoggedIn()) return;
     const user = getCurrentUser();
-    if (!user) {
-      wx.showToast({ title: "请先登录", icon: "none" });
-      wx.navigateTo({ url: "/pages/login/login" });
-      return;
-    }
+    const data = validated.data;
 
     const payload = {
-      title: values.title.trim(),
-      price: Number(values.price),
+      title: data.title,
+      price: data.price,
       category: categories[this.data.categoryIndex].value,
       condition: conditions[this.data.conditionIndex].value,
-      dormitory: values.handover_location.trim(),
-      handover_location: values.handover_location.trim(),
-      description: values.description || "",
+      dormitory: data.handover_location,
+      handover_location: data.handover_location,
+      description: data.description,
       images: this.data.images,
-      wechat_id: user ? user.wechat_id : "youwu_demo"
+      wechat_id: user.wechat_id
     };
 
     wx.showLoading({ title: this.data.isEdit ? "保存中" : "发布中", mask: true });
@@ -122,7 +159,9 @@ Page({
 
     wx.hideLoading();
     this.setData({ submitting: false });
-    wx.showToast({ title: this.data.isEdit ? "已保存" : "已发布" });
-    wx.reLaunch({ url: "/pages/home/home" });
+    wx.showToast({ title: this.data.isEdit ? "保存好了" : "发布成功", icon: "success" });
+    setTimeout(() => {
+      wx.reLaunch({ url: "/pages/home/home" });
+    }, 700);
   }
 });

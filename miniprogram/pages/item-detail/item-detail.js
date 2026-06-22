@@ -8,10 +8,12 @@ const { canViewContact } = require("../../services/user-service");
 
 function buildShareText(item) {
   return [
+    "有物之间 · CUHK二手",
     item.title,
-    `${item.price}元`,
-    item.status_label,
-    item.handover_location || item.dormitory,
+    `价格：${item.price}元`,
+    item.status_label ? `状态：${item.status_label}` : "",
+    item.handover_location || item.dormitory ? `交收：${item.handover_location || item.dormitory}` : "",
+    item.seller_name ? `发布者：${item.seller_name}` : "",
     "点击查看详情"
   ].filter(Boolean).join("\n");
 }
@@ -53,6 +55,17 @@ Page({
     this.setData({ imageError: true });
   },
 
+  previewImages() {
+    const item = this.data.item;
+    const urls = (item.images && item.images.length ? item.images : [item.cover_image_url]).filter(Boolean);
+    if (!urls.length) return;
+
+    wx.previewImage({
+      current: urls.includes(item.cover_image_url) ? item.cover_image_url : urls[0],
+      urls
+    });
+  },
+
   loadContact() {
     const allowed = canViewContact();
     const item = this.data.item.id ? this.data.item : getItem(this.data.id);
@@ -71,7 +84,10 @@ Page({
 
     wx.setClipboardData({
       data: wechatId,
-      success: () => logContactView(this.data.id, this.data.item.seller_id)
+      success: () => {
+        logContactView(this.data.id, this.data.item.seller_id);
+        wx.showToast({ title: "微信号已复制", icon: "success" });
+      }
     });
   },
 
@@ -115,10 +131,9 @@ Page({
   reportItem() {
     wx.showActionSheet({
       itemList: ["诈骗", "虚假商品", "骚扰", "不当内容"],
-      success: (res) => {
-        const reasons = ["诈骗", "虚假商品", "骚扰", "不当内容"];
+      success: () => {
         wx.showToast({
-          title: `已记录：${reasons[res.tapIndex]}`,
+          title: "举报已提交",
           icon: "none"
         });
       }
