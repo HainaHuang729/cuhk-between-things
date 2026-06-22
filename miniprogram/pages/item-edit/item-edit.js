@@ -3,6 +3,7 @@ const {
   conditions,
   createItem,
   getItem,
+  isItemOwner,
   updateItem
 } = require("../../services/item-service");
 const { getCurrentUser } = require("../../services/user-service");
@@ -57,6 +58,16 @@ Page({
     const item = getItem(options.id);
     if (!item) {
       wx.showToast({ title: "商品不存在", icon: "none" });
+      return;
+    }
+
+    if (!isItemOwner(item)) {
+      wx.showToast({ title: "只有发布者可编辑", icon: "none" });
+      setTimeout(() => {
+        wx.navigateBack({
+          fail: () => wx.switchTab({ url: "/pages/home/home" })
+        });
+      }, 500);
       return;
     }
 

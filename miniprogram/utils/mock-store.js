@@ -1,5 +1,7 @@
 const ITEMS_KEY = "youwu_items_v1";
 const FAVORITES_KEY = "youwu_item_favorites_v1";
+const SEED_VERSION_KEY = "youwu_seed_version_v1";
+const SEED_VERSION = 2;
 const USER_KEY = "youwu_mock_user_v1";
 
 const itemStatuses = [
@@ -45,6 +47,7 @@ const seedItems = [
     wechat_id: "youwu_demo",
     cover_image_url: "/assets/items/luosifen.svg",
     images: ["/assets/items/luosifen.svg"],
+    placeholder_height: 280,
     created_at: "2026-06-22T08:00:00Z"
   },
   {
@@ -61,6 +64,9 @@ const seedItems = [
     seller_name: "CUHK Student",
     owner_id: "mock-user",
     wechat_id: "youwu_demo",
+    cover_image_url: "/assets/items/monitor.svg",
+    images: ["/assets/items/monitor.svg"],
+    placeholder_height: 250,
     created_at: "2026-06-22T07:50:00Z"
   },
   {
@@ -77,6 +83,9 @@ const seedItems = [
     seller_name: "CUHK Student",
     owner_id: "mock-user",
     wechat_id: "youwu_demo",
+    cover_image_url: "/assets/items/chair.svg",
+    images: ["/assets/items/chair.svg"],
+    placeholder_height: 320,
     created_at: "2026-06-22T07:40:00Z"
   },
   {
@@ -93,6 +102,9 @@ const seedItems = [
     seller_name: "CUHK Student",
     owner_id: "mock-user",
     wechat_id: "youwu_demo",
+    cover_image_url: "/assets/items/desk-lamp.svg",
+    images: ["/assets/items/desk-lamp.svg"],
+    placeholder_height: 330,
     created_at: "2026-06-22T07:30:00Z"
   },
   {
@@ -109,6 +121,7 @@ const seedItems = [
     seller_name: "CUHK Student",
     owner_id: "mock-user",
     wechat_id: "youwu_demo",
+    placeholder_height: 270,
     created_at: "2026-06-22T07:20:00Z"
   },
   {
@@ -125,6 +138,9 @@ const seedItems = [
     seller_name: "CUHK Student",
     owner_id: "mock-user",
     wechat_id: "youwu_demo",
+    cover_image_url: "/assets/items/textbook.svg",
+    images: ["/assets/items/textbook.svg"],
+    placeholder_height: 340,
     created_at: "2026-06-22T07:10:00Z"
   },
   {
@@ -141,7 +157,198 @@ const seedItems = [
     seller_name: "CUHK Student",
     owner_id: "mock-user",
     wechat_id: "youwu_demo",
+    cover_image_url: "/assets/items/storage-box.svg",
+    images: ["/assets/items/storage-box.svg"],
+    placeholder_height: 260,
     created_at: "2026-06-22T07:00:00Z"
+  },
+  {
+    id: "mock-item-7",
+    title: "小米电饭锅 3L 宿舍做饭煮粥都可以",
+    price: 160,
+    category: "kitchen",
+    condition: "good",
+    dormitory: "研究生宿舍",
+    handover_location: "研究生宿舍大堂",
+    description: "内胆干净，带量杯和饭勺，适合两三个人用。",
+    status: "available",
+    seller_id: "mock-user-2",
+    seller_name: "Grace Lee",
+    owner_id: "mock-user-2",
+    wechat_id: "grace_cuhk",
+    cover_image_url: "/assets/items/rice-cooker.svg",
+    images: ["/assets/items/rice-cooker.svg"],
+    placeholder_height: 330,
+    created_at: "2026-06-22T09:30:00Z"
+  },
+  {
+    id: "mock-item-8",
+    title: "塑料衣架 20 个 打包出",
+    price: 18,
+    category: "dorm",
+    condition: "usable",
+    dormitory: "23座",
+    handover_location: "23座楼下",
+    description: "搬宿清理，衣架有白色和灰色，全部一起拿走。",
+    status: "available",
+    seller_id: "mock-user-3",
+    seller_name: "Jason Chan",
+    owner_id: "mock-user-3",
+    wechat_id: "jason_cu",
+    cover_image_url: "/assets/items/hangers.svg",
+    images: ["/assets/items/hangers.svg"],
+    placeholder_height: 230,
+    created_at: "2026-06-22T09:20:00Z"
+  },
+  {
+    id: "mock-item-9",
+    title: "TP-Link 路由器 WiFi 6",
+    price: 120,
+    category: "electronics",
+    condition: "like_new",
+    dormitory: "56座",
+    handover_location: "伍宜孙56座",
+    description: "信号稳定，配电源线，适合宿舍使用。",
+    status: "available",
+    seller_id: "mock-user",
+    seller_name: "CUHK Student",
+    owner_id: "mock-user",
+    wechat_id: "youwu_demo",
+    cover_image_url: "/assets/items/router.svg",
+    images: ["/assets/items/router.svg"],
+    placeholder_height: 230,
+    created_at: "2026-06-22T09:10:00Z"
+  },
+  {
+    id: "mock-item-10",
+    title: "无线键盘 适合 iPad 和电脑",
+    price: 60,
+    category: "electronics",
+    condition: "good",
+    dormitory: "39座",
+    handover_location: "39座门口",
+    description: "蓝牙连接正常，按键手感还可以。",
+    status: "sold",
+    seller_id: "mock-user-2",
+    seller_name: "Grace Lee",
+    owner_id: "mock-user-2",
+    wechat_id: "grace_cuhk",
+    cover_image_url: "/assets/items/keyboard.svg",
+    images: ["/assets/items/keyboard.svg"],
+    placeholder_height: 220,
+    created_at: "2026-06-22T09:00:00Z"
+  },
+  {
+    id: "mock-item-11",
+    title: "热水壶 1.5L",
+    price: 45,
+    category: "kitchen",
+    condition: "usable",
+    dormitory: "联合",
+    handover_location: "联合书院门口",
+    description: "加热正常，有使用痕迹，介意勿拍。",
+    status: "available",
+    seller_id: "mock-user-4",
+    seller_name: "Ming Wong",
+    owner_id: "mock-user-4",
+    wechat_id: "ming_cuhk",
+    cover_image_url: "/assets/items/kettle.svg",
+    images: ["/assets/items/kettle.svg"],
+    placeholder_height: 320,
+    created_at: "2026-06-22T08:50:00Z"
+  },
+  {
+    id: "mock-item-12",
+    title: "可折叠宿舍椅",
+    price: 70,
+    category: "furniture",
+    condition: "good",
+    dormitory: "新亚",
+    handover_location: "新亚圆形广场",
+    description: "坐着稳定，折起来不占地方。",
+    status: "available",
+    seller_id: "mock-user-3",
+    seller_name: "Jason Chan",
+    owner_id: "mock-user-3",
+    wechat_id: "jason_cu",
+    cover_image_url: "/assets/items/chair.svg",
+    images: ["/assets/items/chair.svg"],
+    placeholder_height: 340,
+    created_at: "2026-06-22T08:40:00Z"
+  },
+  {
+    id: "mock-item-13",
+    title: "透明收纳盒 三个一起出",
+    price: 50,
+    category: "dorm",
+    condition: "good",
+    dormitory: "晨兴",
+    handover_location: "晨兴书院大堂",
+    description: "适合放衣物和杂物，三个一起出。",
+    status: "available",
+    seller_id: "mock-user",
+    seller_name: "CUHK Student",
+    owner_id: "mock-user",
+    wechat_id: "youwu_demo",
+    cover_image_url: "/assets/items/storage-box.svg",
+    images: ["/assets/items/storage-box.svg"],
+    placeholder_height: 260,
+    created_at: "2026-06-22T08:30:00Z"
+  },
+  {
+    id: "mock-item-14",
+    title: "MATH1010 教材和练习册",
+    price: 90,
+    category: "textbook",
+    condition: "good",
+    dormitory: "崇基",
+    handover_location: "大学站",
+    description: "有少量荧光笔标记，练习册大部分空白。",
+    status: "available",
+    seller_id: "mock-user-4",
+    seller_name: "Ming Wong",
+    owner_id: "mock-user-4",
+    wechat_id: "ming_cuhk",
+    cover_image_url: "/assets/items/textbook.svg",
+    images: ["/assets/items/textbook.svg"],
+    placeholder_height: 350,
+    created_at: "2026-06-22T08:20:00Z"
+  },
+  {
+    id: "mock-item-15",
+    title: "超长标题测试：毕业搬宿出一批宿舍用品包含小桌板收纳篮延长线和几个没有拍照的小物件",
+    price: 88,
+    category: "dorm",
+    condition: "usable",
+    dormitory: "逸夫",
+    handover_location: "逸夫书院门口",
+    description: "用于测试首页两行标题省略、无图片占位和详情页长标题展示。",
+    status: "available",
+    seller_id: "mock-user-5",
+    seller_name: "Alex Lau",
+    owner_id: "mock-user-5",
+    wechat_id: "alex_cu",
+    placeholder_height: 300,
+    created_at: "2026-06-22T08:10:00Z"
+  },
+  {
+    id: "mock-item-16",
+    title: "旧台灯 已下架测试",
+    price: 30,
+    category: "dorm",
+    condition: "flawed",
+    dormitory: "23座",
+    handover_location: "23座",
+    description: "用于测试已下架筛选和详情状态。",
+    status: "off_shelf",
+    seller_id: "mock-user-2",
+    seller_name: "Grace Lee",
+    owner_id: "mock-user-2",
+    wechat_id: "grace_cuhk",
+    cover_image_url: "/assets/items/desk-lamp.svg",
+    images: ["/assets/items/desk-lamp.svg"],
+    placeholder_height: 330,
+    created_at: "2026-06-22T08:05:00Z"
   }
 ];
 
@@ -164,21 +371,52 @@ function normalizeItem(item) {
     category_label: labelOf(categories, item.category || "other"),
     condition_label: labelOf(conditions, item.condition || "good"),
     is_favorited: isFavoriteItem(item.id),
+    placeholder_height: Number(item.placeholder_height || 260),
     images: item.images || (item.cover_image_url ? [item.cover_image_url] : [])
   };
+}
+
+function applySeedDefaults(item) {
+  const seed = seedItems.find((entry) => entry.id === item.id);
+  if (!seed) return item;
+
+  return {
+    ...seed,
+    ...item,
+    cover_image_url: item.cover_image_url || seed.cover_image_url,
+    images: item.images && item.images.length ? item.images : seed.images,
+    placeholder_height: item.placeholder_height || seed.placeholder_height,
+    seller_id: item.seller_id || seed.seller_id,
+    seller_name: item.seller_name || seed.seller_name,
+    wechat_id: item.wechat_id || seed.wechat_id
+  };
+}
+
+function mergeSeedItems(items) {
+  const upgradedItems = items.map(applySeedDefaults);
+  const existingIds = upgradedItems.map((item) => item.id);
+  const missingSeeds = seedItems.filter((item) => !existingIds.includes(item.id));
+  return missingSeeds.length ? [...upgradedItems, ...missingSeeds] : upgradedItems;
 }
 
 function readItems() {
   const saved = wx.getStorageSync(ITEMS_KEY);
   if (Array.isArray(saved)) {
-    const normalized = saved.map(normalizeItem);
-    const needsMigration = saved.some((item) => !item.seller_id || !item.seller_name);
-    if (needsMigration) writeItems(normalized);
+    const savedSeedVersion = Number(wx.getStorageSync(SEED_VERSION_KEY) || 0);
+    const merged = savedSeedVersion < SEED_VERSION ? mergeSeedItems(saved) : saved;
+    const normalized = merged.map(normalizeItem);
+    const needsMigration = savedSeedVersion < SEED_VERSION
+      || saved.some((item) => !item.seller_id || !item.seller_name);
+    if (needsMigration) {
+      writeItems(normalized);
+      wx.setStorageSync(SEED_VERSION_KEY, SEED_VERSION);
+    }
     return normalized;
   }
 
   const normalizedSeed = seedItems.map(normalizeItem);
   wx.setStorageSync(ITEMS_KEY, normalizedSeed);
+  wx.setStorageSync(SEED_VERSION_KEY, SEED_VERSION);
   return normalizedSeed;
 }
 

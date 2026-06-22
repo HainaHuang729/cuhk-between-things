@@ -98,7 +98,15 @@ Page({
     wx.navigateTo({ url: "/pages/login/login" });
   },
 
+  ensureOwnerAction() {
+    if (this.data.isOwner) return true;
+
+    wx.showToast({ title: "只有发布者可操作", icon: "none" });
+    return false;
+  },
+
   editItem() {
+    if (!this.ensureOwnerAction()) return;
     wx.navigateTo({ url: `/pages/item-edit/item-edit?id=${this.data.id}` });
   },
 
@@ -121,10 +129,12 @@ Page({
   },
 
   markSold() {
+    if (!this.ensureOwnerAction()) return;
     this.updateStatus("sold", "已标记售出");
   },
 
   offShelf() {
+    if (!this.ensureOwnerAction()) return;
     wx.showModal({
       title: "下架商品",
       content: "下架后仍可在详情页查看，首页会显示已下架状态。",
@@ -136,6 +146,7 @@ Page({
   },
 
   removeItem() {
+    if (!this.ensureOwnerAction()) return;
     wx.showModal({
       title: "删除商品",
       content: "删除后将从本地 mock 列表移除。",

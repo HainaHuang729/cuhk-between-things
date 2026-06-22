@@ -29,7 +29,7 @@
     <view class="empty-copy">{{emptyCopy}}</view>
   </view>
 
-  <view wx:else class="market-grid">
+  <view wx:else class="market-masonry">
     <view
       wx:for="{{items}}"
       wx:key="id"
@@ -41,12 +41,13 @@
       <view class="item-photo">
         <image
           wx:if="{{item.cover_image_url && !item.image_error}}"
+          class="item-image"
           src="{{item.cover_image_url}}"
-          mode="aspectFill"
+          mode="widthFix"
           data-id="{{item.id}}"
           binderror="onImageError"
         ></image>
-        <view wx:else class="item-fallback"></view>
+        <view wx:else class="item-fallback" style="height: {{item.placeholder_height || 260}}rpx;"></view>
         <view class="status-badge status-{{item.status}}">{{item.status_label}}</view>
       </view>
       <view class="item-info">
