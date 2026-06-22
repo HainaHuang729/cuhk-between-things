@@ -9,6 +9,19 @@ Page({
     this.setData({ wechatId: event.detail.value });
   },
 
+  goAfterLogin() {
+    const pages = getCurrentPages();
+    if (pages.length > 1) {
+      wx.navigateBack({
+        delta: 1,
+        fail: () => wx.switchTab({ url: "/pages/profile/profile" })
+      });
+      return;
+    }
+
+    wx.switchTab({ url: "/pages/profile/profile" });
+  },
+
   login() {
     const wechatId = this.data.wechatId.trim();
     if (!wechatId) {
@@ -20,6 +33,6 @@ Page({
     getApp().globalData.accessToken = "mock-access-token";
     getApp().globalData.user = user;
     wx.showToast({ title: "已登录" });
-    wx.navigateBack();
+    setTimeout(() => this.goAfterLogin(), 300);
   }
 });
