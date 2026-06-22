@@ -1,4 +1,9 @@
-const { getItemById, getMockUser } = require("../../utils/mock-store");
+const {
+  getItemById,
+  getMockUser,
+  isItemOwner,
+  updateItemStatus
+} = require("../../utils/mock-store");
 
 function buildShareText(item) {
   return [
@@ -15,7 +20,9 @@ Page({
     id: "",
     item: {},
     contact: {},
-    isLoggedIn: false
+    isLoggedIn: false,
+    isOwner: false,
+    imageError: false
   },
 
   onLoad(options) {
@@ -24,7 +31,7 @@ Page({
   },
 
   onShow() {
-    this.loadContact();
+    if (this.data.id) this.loadItem(this.data.id);
   },
 
   loadItem(id) {
@@ -34,7 +41,15 @@ Page({
       return;
     }
 
-    this.setData({ item }, () => this.loadContact());
+    this.setData({
+      item,
+      isOwner: isItemOwner(item),
+      imageError: false
+    }, () => this.loadContact());
+  },
+
+  onImageError() {
+    this.setData({ imageError: true });
   },
 
   loadContact() {
@@ -52,6 +67,39 @@ Page({
 
   goLogin() {
     wx.navigateTo({ url: "/pages/login/login" });
+  },
+
+  editItem() {
+    wx.navigateTo({ url: `/pages/item-edit/item-edit?id=${this.data.id}` });
+  },
+
+  markSold() {
+    this.updateStatus("sold", "已标记售出");
+  },
+
+  offShelf() {
+    wx.showModal({
+      title: "下架商品",
+      content: "下架后仍可在详情页查看，首页会显示已下架状态。",
+      confirmText: "下架",
+      success: (res) => {
+        if (res.confirm) this.updateStatus("off_shelf", "已下架");
+      }
+    });
+  },
+
+  updateStatus(status, toastTitle) {
+    const item = updateItemStatus(this.data.id, status);
+    if (!item) {
+      wx.showToast({ title: "更新失败", icon: "none" });
+      return;
+    }
+
+    this.setData({
+      item,
+      isOwner: isItemOwner(item)
+    }, () => this.loadContact());
+    wx.showToast({ title: toastTitle });
   },
 
   reportItem() {

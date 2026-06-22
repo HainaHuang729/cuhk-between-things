@@ -1,4 +1,11 @@
-const { addItem, categories, conditions, getMockUser } = require("../../utils/mock-store");
+const {
+  addItem,
+  categories,
+  conditions,
+  getItemById,
+  getMockUser,
+  updateItem
+} = require("../../utils/mock-store");
 
 Page({
   data: {
@@ -8,7 +15,45 @@ Page({
     conditionIndex: 2,
     categoryLabel: categories[0].label,
     conditionLabel: conditions[2].label,
-    images: []
+    images: [],
+    itemId: "",
+    form: {
+      title: "",
+      price: "",
+      handover_location: "",
+      description: ""
+    },
+    isEdit: false,
+    submitting: false
+  },
+
+  onLoad(options) {
+    if (!options.id) return;
+
+    const item = getItemById(options.id);
+    if (!item) {
+      wx.showToast({ title: "商品不存在", icon: "none" });
+      return;
+    }
+
+    const categoryIndex = Math.max(0, categories.findIndex((entry) => entry.value === item.category));
+    const conditionIndex = Math.max(0, conditions.findIndex((entry) => entry.value === item.condition));
+
+    this.setData({
+      itemId: item.id,
+      isEdit: true,
+      categoryIndex,
+      conditionIndex,
+      categoryLabel: categories[categoryIndex].label,
+      conditionLabel: conditions[conditionIndex].label,
+      images: item.images || [],
+      form: {
+        title: item.title,
+        price: String(item.price),
+        handover_location: item.handover_location,
+        description: item.description
+      }
+    });
   },
 
   onCategoryChange(event) {
@@ -19,6 +64,11 @@ Page({
   onConditionChange(event) {
     const index = Number(event.detail.value);
     this.setData({ conditionIndex: index, conditionLabel: conditions[index].label });
+  },
+
+  onFieldInput(event) {
+    const field = event.currentTarget.dataset.field;
+    this.setData({ [`form.${field}`]: event.detail.value });
   },
 
   chooseImages() {
@@ -33,6 +83,8 @@ Page({
   },
 
   submit(event) {
+    if (this.data.submitting) return;
+
     const values = event.detail.value;
 
     if (!values.title || !values.price || !values.handover_location) {
@@ -41,7 +93,7 @@ Page({
     }
 
     const user = getMockUser();
-    addItem({
+    const payload = {
       title: values.title.trim(),
       price: Number(values.price),
       category: categories[this.data.categoryIndex].value,
@@ -51,9 +103,20 @@ Page({
       description: values.description || "",
       images: this.data.images,
       wechat_id: user ? user.wechat_id : "youwu_demo"
-    });
+    };
 
-    wx.showToast({ title: "已发布" });
+    wx.showLoading({ title: this.data.isEdit ? "保存中" : "发布中", mask: true });
+    this.setData({ submitting: true });
+
+    if (this.data.isEdit) {
+      updateItem(this.data.itemId, payload);
+    } else {
+      addItem(payload);
+    }
+
+    wx.hideLoading();
+    this.setData({ submitting: false });
+    wx.showToast({ title: this.data.isEdit ? "已保存" : "已发布" });
     wx.reLaunch({ url: "/pages/home/home" });
   }
 });

@@ -3,6 +3,19 @@
   height: 100%;
 }
 
+.detail-image-fallback {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(111, 44, 145, 0.12) 0, rgba(111, 44, 145, 0.12) 72rpx, transparent 74rpx),
+    linear-gradient(135deg, #eee9f5 0%, #d9c8ec 100%);
+  color: #6F2C91;
+  font-weight: 800;
+}
+
 .detail-title-row {
   display: flex;
   align-items: flex-start;
@@ -33,9 +46,24 @@
   background: rgba(31, 41, 51, 0.76);
 }
 
+.owner-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+  margin: 20rpx 0;
+}
+
+.owner-actions .primary-button,
+.owner-actions .secondary-button {
+  height: 76rpx;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+}
+
 .contact-panel {
   border-color: rgba(111, 44, 145, 0.22);
   background: #fbf8ff;
+  box-shadow: 0 10rpx 28rpx rgba(65, 30, 103, 0.08);
 }
 
 .wechat-id {

@@ -38,6 +38,7 @@ const seedItems = [
     handover_location: "宿舍楼下",
     description: "未拆封，10元出。",
     status: "available",
+    owner_id: "mock-user",
     wechat_id: "youwu_demo",
     cover_image_url: "/assets/items/luosifen.svg",
     images: ["/assets/items/luosifen.svg"],
@@ -53,6 +54,7 @@ const seedItems = [
     handover_location: "伍宜孙56座大堂",
     description: "状态良好，含 HDMI 线。",
     status: "available",
+    owner_id: "mock-user",
     wechat_id: "youwu_demo",
     created_at: "2026-06-22T07:50:00Z"
   },
@@ -66,6 +68,7 @@ const seedItems = [
     handover_location: "23座门口",
     description: "搬宿出，轻微使用痕迹。",
     status: "reserved",
+    owner_id: "mock-user",
     wechat_id: "youwu_demo",
     created_at: "2026-06-22T07:40:00Z"
   },
@@ -79,6 +82,7 @@ const seedItems = [
     handover_location: "楼下",
     description: "亮度稳定，可直接使用。",
     status: "available",
+    owner_id: "mock-user",
     wechat_id: "youwu_demo",
     created_at: "2026-06-22T07:30:00Z"
   },
@@ -92,6 +96,7 @@ const seedItems = [
     handover_location: "大堂",
     description: "适合宿舍使用，需自取。",
     status: "sold",
+    owner_id: "mock-user",
     wechat_id: "youwu_demo",
     created_at: "2026-06-22T07:20:00Z"
   },
@@ -105,6 +110,7 @@ const seedItems = [
     handover_location: "大学站",
     description: "少量笔记，整体干净。",
     status: "available",
+    owner_id: "mock-user",
     wechat_id: "youwu_demo",
     created_at: "2026-06-22T07:10:00Z"
   },
@@ -118,6 +124,7 @@ const seedItems = [
     handover_location: "楼下",
     description: "两个一起出，适合搬宿。",
     status: "off_shelf",
+    owner_id: "mock-user",
     wechat_id: "youwu_demo",
     created_at: "2026-06-22T07:00:00Z"
   }
@@ -133,6 +140,7 @@ function normalizeItem(item) {
     ...item,
     price: Number(item.price || 0),
     status: item.status || "available",
+    owner_id: item.owner_id || "mock-user",
     status_label: labelOf(itemStatuses, item.status || "available"),
     category_label: labelOf(categories, item.category || "other"),
     condition_label: labelOf(conditions, item.condition || "good"),
@@ -142,7 +150,7 @@ function normalizeItem(item) {
 
 function readItems() {
   const saved = wx.getStorageSync(ITEMS_KEY);
-  if (Array.isArray(saved) && saved.length) {
+  if (Array.isArray(saved)) {
     return saved.map(normalizeItem);
   }
 
@@ -182,6 +190,7 @@ function getItemById(id) {
 function addItem(input) {
   const items = readItems();
   const now = new Date().toISOString();
+  const user = getMockUser();
   const item = normalizeItem({
     id: `local-${Date.now()}`,
     title: input.title,
@@ -192,6 +201,7 @@ function addItem(input) {
     handover_location: input.handover_location,
     description: input.description,
     status: "available",
+    owner_id: user ? user.id : "mock-user",
     images: input.images || [],
     cover_image_url: input.images && input.images.length ? input.images[0] : "",
     wechat_id: input.wechat_id || "youwu_demo",
@@ -202,12 +212,63 @@ function addItem(input) {
   return item;
 }
 
+function updateItem(id, input) {
+  let updated = null;
+  const items = readItems().map((item) => {
+    if (item.id !== id) return item;
+
+    updated = normalizeItem({
+      ...item,
+      title: input.title,
+      price: Number(input.price || 0),
+      category: input.category,
+      condition: input.condition,
+      dormitory: input.dormitory,
+      handover_location: input.handover_location,
+      description: input.description,
+      images: input.images && input.images.length ? input.images : item.images,
+      cover_image_url: input.images && input.images.length
+        ? input.images[0]
+        : item.cover_image_url,
+      updated_at: new Date().toISOString()
+    });
+
+    return updated;
+  });
+
+  if (updated) writeItems(items);
+  return updated;
+}
+
+function updateItemStatus(id, status) {
+  let updated = null;
+  const items = readItems().map((item) => {
+    if (item.id !== id) return item;
+
+    updated = normalizeItem({
+      ...item,
+      status,
+      updated_at: new Date().toISOString()
+    });
+
+    return updated;
+  });
+
+  if (updated) writeItems(items);
+  return updated;
+}
+
 function getMockUser() {
   return wx.getStorageSync(USER_KEY) || null;
 }
 
 function isLoggedIn() {
   return Boolean(getMockUser());
+}
+
+function isItemOwner(item) {
+  const user = getMockUser();
+  return Boolean(user && item && item.owner_id === user.id);
 }
 
 function mockLogin(wechatId) {
@@ -238,7 +299,10 @@ module.exports = {
   getItems,
   getMockUser,
   isLoggedIn,
+  isItemOwner,
   itemStatuses,
   mockLogin,
-  mockLogout
+  mockLogout,
+  updateItem,
+  updateItemStatus
 };

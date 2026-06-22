@@ -1,7 +1,12 @@
 <view class="page">
   <view class="detail-image">
-    <image wx:if="{{item.cover_image_url}}" src="{{item.cover_image_url}}" mode="aspectFill"></image>
-    <text wx:else>商品图片</text>
+    <image
+      wx:if="{{item.cover_image_url && !imageError}}"
+      src="{{item.cover_image_url}}"
+      mode="aspectFill"
+      binderror="onImageError"
+    ></image>
+    <view wx:else class="detail-image-fallback">商品图片</view>
   </view>
 
   <view class="card">
@@ -17,6 +22,12 @@
   <view class="card">
     <view class="section-title">描述</view>
     <view>{{item.description}}</view>
+  </view>
+
+  <view wx:if="{{isOwner}}" class="owner-actions">
+    <view class="secondary-button" bindtap="editItem">编辑商品</view>
+    <view class="secondary-button" bindtap="offShelf">下架</view>
+    <view class="primary-button" bindtap="markSold">标记已售</view>
   </view>
 
   <view class="card contact-panel">

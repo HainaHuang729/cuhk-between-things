@@ -3,7 +3,8 @@ const { getItems } = require("../../utils/mock-store");
 Page({
   data: {
     q: "",
-    items: []
+    items: [],
+    loading: false
   },
 
   onLoad() {
@@ -24,7 +25,19 @@ Page({
   },
 
   loadFeed() {
-    this.setData({ items: getItems(this.data.q) });
+    this.setData({ loading: true });
+    this.setData({
+      items: getItems(this.data.q),
+      loading: false
+    });
+  },
+
+  onImageError(event) {
+    const id = event.currentTarget.dataset.id;
+    const items = this.data.items.map((item) => (
+      item.id === id ? { ...item, image_error: true } : item
+    ));
+    this.setData({ items });
   },
 
   goItem(event) {

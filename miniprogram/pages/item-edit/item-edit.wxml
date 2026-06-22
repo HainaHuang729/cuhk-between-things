@@ -1,20 +1,20 @@
 <view class="page">
-  <view class="top-title">发布商品</view>
+  <view class="top-title">{{isEdit ? '编辑商品' : '发布商品'}}</view>
   <form class="form" bindsubmit="submit">
-    <input class="field" name="title" placeholder="标题，例如 Dell 27寸显示器" />
-    <input class="field" name="price" type="digit" placeholder="价格 元" />
+    <input class="field" name="title" value="{{form.title}}" data-field="title" bindinput="onFieldInput" placeholder="标题，例如 Dell 27寸显示器" />
+    <input class="field" name="price" value="{{form.price}}" data-field="price" bindinput="onFieldInput" type="digit" placeholder="价格 元" />
     <picker mode="selector" range="{{categories}}" range-key="label" bindchange="onCategoryChange">
       <view class="field">{{categoryLabel}}</view>
     </picker>
     <picker mode="selector" range="{{conditions}}" range-key="label" bindchange="onConditionChange">
       <view class="field">{{conditionLabel}}</view>
     </picker>
-    <input class="field" name="handover_location" placeholder="地点，例如 56座 / 大学站" />
-    <textarea class="field textarea" name="description" placeholder="描述" />
+    <input class="field" name="handover_location" value="{{form.handover_location}}" data-field="handover_location" bindinput="onFieldInput" placeholder="地点，例如 56座 / 大学站" />
+    <textarea class="field textarea" name="description" value="{{form.description}}" data-field="description" bindinput="onFieldInput" placeholder="描述" />
     <view class="upload-row" wx:if="{{images.length}}">
       <image wx:for="{{images}}" wx:key="*this" class="upload-preview" src="{{item}}" mode="aspectFill"></image>
     </view>
     <view class="secondary-button" bindtap="chooseImages">上传图片</view>
-    <button class="primary-button" form-type="submit">提交</button>
+    <button class="primary-button" loading="{{submitting}}" disabled="{{submitting}}" form-type="submit">{{isEdit ? '保存' : '提交'}}</button>
   </form>
 </view>

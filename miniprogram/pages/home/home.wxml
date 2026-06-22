@@ -10,10 +10,23 @@
     />
   </view>
 
-  <view class="market-grid">
+  <view wx:if="{{loading}}" class="loading-state">加载中</view>
+
+  <view wx:elif="{{!items.length}}" class="empty-state">
+    <view class="empty-title">{{q ? '没有找到商品' : '暂无商品'}}</view>
+    <view class="empty-copy">{{q ? '换个关键词试试' : '发布后会出现在这里'}}</view>
+  </view>
+
+  <view wx:else class="market-grid">
     <view wx:for="{{items}}" wx:key="id" class="item-card" data-id="{{item.id}}" bindtap="goItem">
       <view class="item-photo">
-        <image wx:if="{{item.cover_image_url}}" src="{{item.cover_image_url}}" mode="aspectFill"></image>
+        <image
+          wx:if="{{item.cover_image_url && !item.image_error}}"
+          src="{{item.cover_image_url}}"
+          mode="aspectFill"
+          data-id="{{item.id}}"
+          binderror="onImageError"
+        ></image>
         <view wx:else class="item-fallback"></view>
         <view class="status-badge status-{{item.status}}">{{item.status_label}}</view>
       </view>
