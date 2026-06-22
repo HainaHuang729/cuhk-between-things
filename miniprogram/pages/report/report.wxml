@@ -1,0 +1,10 @@
+<view class="page">
+  <view class="top-title">举报</view>
+  <form class="form" bindsubmit="submit">
+    <picker mode="selector" range="{{reasons}}" range-key="label" bindchange="onReasonChange">
+      <view class="field">{{reasonLabel}}</view>
+    </picker>
+    <textarea class="field textarea" name="description" placeholder="补充说明" />
+    <button class="primary-button" form-type="submit">提交举报</button>
+  </form>
+</view>

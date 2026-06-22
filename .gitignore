@@ -1,0 +1,23 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+*.log
+.env
+.env.local
+.env.*.local
+.DS_Store
+
+# WeChat DevTools local/private files
+project.private.config.json
+
+# Original Tencent cloud quickstart template kept locally only.
+miniprogram-original-backup-20260622/
+cloudfunctions/
+uploadCloudFunction.sh
+miniprogram/envList.js
+miniprogram/components/cloudTipModal/
+miniprogram/pages/index/
+miniprogram/pages/example/
+miniprogram/images/

@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/item-detail/item-detail",
+    "pages/item-edit/item-edit",
+    "pages/group-detail/group-detail",
+    "pages/group-edit/group-edit",
+    "pages/login/login",
+    "pages/profile/profile",
+    "pages/report/report"
+  ],
+  "window": {
+    "navigationBarTitleText": "CUHK Marketplace",
+    "navigationBarBackgroundColor": "#F7F7F4",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F7F7F4"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

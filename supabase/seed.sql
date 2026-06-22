@@ -1,0 +1,2 @@
+-- Optional local seed data. Replace UUIDs with real auth user IDs after creating test users.
+-- insert into public.admins (user_id, role) values ('00000000-0000-0000-0000-000000000000', 'owner');

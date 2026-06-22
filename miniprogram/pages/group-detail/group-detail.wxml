@@ -1,0 +1,37 @@
+<view class="page">
+  <view class="card">
+    <view class="card-title">{{group.title}}</view>
+    <view class="price">当前 {{group.current_size}} / 目标 {{group.target_size}}</view>
+    <view class="muted">{{group.source_platform}} · {{group.dormitory}}</view>
+    <view class="muted">交收：{{group.handover_location}}</view>
+    <view class="badge">{{group.status_label || '招募中'}}</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">描述</view>
+    <view>{{group.description}}</view>
+  </view>
+
+  <view class="actions">
+    <view class="primary-button" bindtap="joinGroup">加入拼团</view>
+    <view class="secondary-button" bindtap="leaveGroup">退出</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">联系团长</view>
+    <view wx:if="{{contact.wechat_id}}">
+      <view class="muted">微信号</view>
+      <view class="card-title">{{contact.wechat_id}}</view>
+      <view class="primary-button" bindtap="copyWechat">复制微信号</view>
+    </view>
+    <view wx:else>
+      <view class="muted">登录后查看联系方式</view>
+      <view class="primary-button" bindtap="goLogin">CUHK邮箱登录</view>
+    </view>
+  </view>
+
+  <view class="actions">
+    <view class="secondary-button" bindtap="goReport">举报</view>
+    <view class="primary-button" bindtap="shareHint">分享到微信群</view>
+  </view>
+</view>
