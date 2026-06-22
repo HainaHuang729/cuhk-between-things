@@ -1,0 +1,16 @@
+<view class="page">
+  <view class="wanted-grid">
+    <view
+      wx:for="{{wantedItems}}"
+      wx:key="id"
+      class="wanted-card"
+      hover-class="wanted-card-hover"
+      bindtap="showWanted"
+    >
+      <view class="wanted-title">{{item.title}}</view>
+      <view class="wanted-price">预算 {{item.budget}}元</view>
+      <view class="wanted-meta">{{item.dormitory}}</view>
+      <view class="wanted-desc">{{item.description}}</view>
+    </view>
+  </view>
+</view>

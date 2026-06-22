@@ -1,12 +1,14 @@
 {
   "pages": [
     "pages/home/home",
+    "pages/groups/groups",
+    "pages/wanted/wanted",
+    "pages/profile/profile",
     "pages/item-detail/item-detail",
     "pages/item-edit/item-edit",
     "pages/group-detail/group-detail",
     "pages/group-edit/group-edit",
     "pages/login/login",
-    "pages/profile/profile",
     "pages/report/report"
   ],
   "window": {
@@ -14,6 +16,38 @@
     "navigationBarBackgroundColor": "#FAF9FC",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#FAF9FC"
+  },
+  "tabBar": {
+    "color": "#697386",
+    "selectedColor": "#6F2C91",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "二手",
+        "iconPath": "images/icons/goods.png",
+        "selectedIconPath": "images/icons/goods-active.png"
+      },
+      {
+        "pagePath": "pages/groups/groups",
+        "text": "拼团",
+        "iconPath": "images/icons/business.png",
+        "selectedIconPath": "images/icons/business-active.png"
+      },
+      {
+        "pagePath": "pages/wanted/wanted",
+        "text": "求购",
+        "iconPath": "images/icons/home.png",
+        "selectedIconPath": "images/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/icons/usercenter.png",
+        "selectedIconPath": "images/icons/usercenter-active.png"
+      }
+    ]
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2",

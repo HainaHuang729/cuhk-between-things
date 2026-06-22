@@ -1,0 +1,73 @@
+.page {
+  min-height: 100vh;
+  padding: 20rpx 18rpx 28rpx;
+  background: #faf9fc;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.group-card {
+  padding: 22rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  box-shadow: 0 6rpx 18rpx rgba(65, 30, 103, 0.07);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.group-card-hover {
+  opacity: 0.86;
+  transform: scale(0.99);
+}
+
+.group-top,
+.group-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.group-title {
+  flex: 1;
+  overflow: hidden;
+  color: #1f2933;
+  font-size: 30rpx;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-status {
+  flex: 0 0 auto;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(111, 44, 145, 0.9);
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.group-meta {
+  margin: 12rpx 0 18rpx;
+  overflow: hidden;
+  color: #697386;
+  font-size: 24rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-count {
+  color: #6F2C91;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.group-deadline {
+  color: #1f2933;
+  font-size: 24rpx;
+  font-weight: 700;
+}

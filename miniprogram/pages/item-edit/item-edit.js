@@ -151,7 +151,7 @@ Page({
     this.setData({ submitting: false });
     wx.showToast({ title: this.data.isEdit ? "保存好了" : "发布成功", icon: "success" });
     setTimeout(() => {
-      wx.reLaunch({ url: "/pages/home/home" });
+      wx.switchTab({ url: "/pages/home/home" });
     }, 700);
   }
 });
