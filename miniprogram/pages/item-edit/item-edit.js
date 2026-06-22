@@ -32,6 +32,10 @@ function validateForm(values) {
   };
 }
 
+function isCancelError(error) {
+  return error && error.errMsg && error.errMsg.includes("cancel");
+}
+
 Page({
   data: {
     categories,
@@ -106,6 +110,28 @@ Page({
     this.setData({ [`form.${field}`]: event.detail.value });
   },
 
+  appendImages(paths) {
+    if (!paths.length) return;
+
+    const images = this.data.images.concat(paths).slice(0, MAX_IMAGES);
+    this.setData({ images });
+  },
+
+  chooseImagesFallback(remaining) {
+    wx.chooseImage({
+      count: remaining,
+      sizeType: ["compressed", "original"],
+      sourceType: ["album", "camera"],
+      success: (res) => {
+        this.appendImages(res.tempFilePaths || []);
+      },
+      fail: (error) => {
+        if (isCancelError(error)) return;
+        wx.showToast({ title: "图片选择失败", icon: "none" });
+      }
+    });
+  },
+
   chooseImages() {
     const remaining = MAX_IMAGES - this.data.images.length;
     if (remaining <= 0) {
@@ -113,13 +139,22 @@ Page({
       return;
     }
 
+    if (!wx.chooseMedia) {
+      this.chooseImagesFallback(remaining);
+      return;
+    }
+
     wx.chooseMedia({
       count: remaining,
       mediaType: ["image"],
+      sourceType: ["album", "camera"],
       success: (res) => {
         const picked = res.tempFiles.map((file) => file.tempFilePath);
-        const images = this.data.images.concat(picked).slice(0, MAX_IMAGES);
-        this.setData({ images });
+        this.appendImages(picked);
+      },
+      fail: (error) => {
+        if (isCancelError(error)) return;
+        this.chooseImagesFallback(remaining);
       }
     });
   },
