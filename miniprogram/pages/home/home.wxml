@@ -11,13 +11,22 @@
       />
       <view wx:if="{{q}}" class="search-clear" bindtap="clearSearch">×</view>
     </view>
+    <view class="status-row">
+      <view
+        wx:for="{{statusFilters}}"
+        wx:key="value"
+        class="status-chip {{status == item.value ? 'active' : ''}}"
+        data-status="{{item.value}}"
+        bindtap="setStatus"
+      >{{item.label}}</view>
+    </view>
   </view>
 
   <view wx:if="{{loading}}" class="loading-state">加载中</view>
 
   <view wx:elif="{{!items.length}}" class="empty-state">
-    <view class="empty-title">{{q ? '没有找到商品' : '暂无商品'}}</view>
-    <view class="empty-copy">{{q ? '换个关键词试试' : '发布后会出现在这里'}}</view>
+    <view class="empty-title">{{emptyTitle}}</view>
+    <view class="empty-copy">{{emptyCopy}}</view>
   </view>
 
   <view wx:else class="market-grid">

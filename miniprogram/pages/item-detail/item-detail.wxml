@@ -20,6 +20,13 @@
     <view class="muted">{{item.handover_location}}</view>
   </view>
 
+  <view class="detail-actions-row">
+    <view
+      class="favorite-button {{item.is_favorited ? 'favorited' : ''}}"
+      bindtap="toggleFavorite"
+    >{{item.is_favorited ? '已收藏' : '收藏'}}</view>
+  </view>
+
   <view class="card">
     <view class="section-title">描述</view>
     <view>{{item.description}}</view>
@@ -29,6 +36,7 @@
     <view class="secondary-button" bindtap="editItem">编辑商品</view>
     <view class="secondary-button" bindtap="offShelf">下架</view>
     <view class="primary-button" bindtap="markSold">标记已售</view>
+    <view class="danger-button" bindtap="removeItem">删除</view>
   </view>
 
   <view class="card contact-panel">

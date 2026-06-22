@@ -1,10 +1,11 @@
 const { getContactLogs } = require("../../services/contact-service");
-const { getItem, listItems } = require("../../services/item-service");
+const { getItem, listFavoriteItems, listItems } = require("../../services/item-service");
 const { getCurrentUser, mockLogout } = require("../../services/user-service");
 
 Page({
   data: {
     contactedItems: [],
+    favoriteItems: [],
     myItems: [],
     user: {}
   },
@@ -15,16 +16,18 @@ Page({
 
   loadProfile() {
     const user = getCurrentUser();
+    const favoriteItems = listFavoriteItems();
     if (!user) {
       this.setData({
         contactedItems: [],
+        favoriteItems,
         myItems: [],
         user: {}
       });
       return;
     }
 
-    const items = listItems();
+    const items = listItems({ status: "all" });
     const myItems = items.filter((item) => item.seller_id === user.id || item.owner_id === user.id);
     const seen = {};
     const contactedItems = getContactLogs()
@@ -40,6 +43,7 @@ Page({
 
     this.setData({
       contactedItems,
+      favoriteItems,
       myItems,
       user
     });
@@ -63,6 +67,7 @@ Page({
     getApp().globalData.user = null;
     this.setData({
       contactedItems: [],
+      favoriteItems: listFavoriteItems(),
       myItems: [],
       user: {}
     });

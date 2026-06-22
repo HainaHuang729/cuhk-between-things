@@ -1,8 +1,11 @@
 const { logContactView } = require("../../services/contact-service");
 const {
+  deleteItem,
+  favoriteItem,
   getItem,
   isItemOwner,
-  markItemStatus
+  markItemStatus,
+  unfavoriteItem
 } = require("../../services/item-service");
 const { canViewContact } = require("../../services/user-service");
 
@@ -99,6 +102,24 @@ Page({
     wx.navigateTo({ url: `/pages/item-edit/item-edit?id=${this.data.id}` });
   },
 
+  toggleFavorite() {
+    const item = this.data.item;
+    const nextItem = item.is_favorited
+      ? unfavoriteItem(this.data.id)
+      : favoriteItem(this.data.id);
+
+    if (!nextItem) {
+      wx.showToast({ title: "操作失败", icon: "none" });
+      return;
+    }
+
+    this.setData({ item: nextItem });
+    wx.showToast({
+      title: nextItem.is_favorited ? "已收藏" : "已取消收藏",
+      icon: "none"
+    });
+  },
+
   markSold() {
     this.updateStatus("sold", "已标记售出");
   },
@@ -110,6 +131,29 @@ Page({
       confirmText: "下架",
       success: (res) => {
         if (res.confirm) this.updateStatus("off_shelf", "已下架");
+      }
+    });
+  },
+
+  removeItem() {
+    wx.showModal({
+      title: "删除商品",
+      content: "删除后将从本地 mock 列表移除。",
+      confirmText: "删除",
+      confirmColor: "#c2410c",
+      success: (res) => {
+        if (!res.confirm) return;
+
+        const item = deleteItem(this.data.id);
+        if (!item) {
+          wx.showToast({ title: "删除失败", icon: "none" });
+          return;
+        }
+
+        wx.showToast({ title: "已删除", icon: "none" });
+        setTimeout(() => {
+          wx.switchTab({ url: "/pages/home/home" });
+        }, 500);
       }
     });
   },

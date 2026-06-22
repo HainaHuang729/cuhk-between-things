@@ -53,18 +53,52 @@
   background: rgba(31, 41, 51, 0.76);
 }
 
+.detail-actions-row {
+  margin: 20rpx 0;
+}
+
+.favorite-button {
+  display: flex;
+  height: 76rpx;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid rgba(111, 44, 145, 0.18);
+  border-radius: 14rpx;
+  background: #ffffff;
+  color: #6F2C91;
+  font-size: 26rpx;
+  font-weight: 800;
+}
+
+.favorite-button.favorited {
+  border-color: #FFCC33;
+  background: #fff8db;
+  color: #6F2C91;
+}
+
 .owner-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12rpx;
   margin: 20rpx 0;
 }
 
 .owner-actions .primary-button,
-.owner-actions .secondary-button {
+.owner-actions .secondary-button,
+.owner-actions .danger-button {
   height: 76rpx;
   border-radius: 14rpx;
-  font-size: 26rpx;
+  font-size: 24rpx;
+}
+
+.danger-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid rgba(194, 65, 12, 0.24);
+  background: #fff7ed;
+  color: #c2410c;
+  font-weight: 800;
 }
 
 .contact-panel {

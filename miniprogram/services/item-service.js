@@ -1,7 +1,11 @@
 const mockStore = require("../utils/mock-store");
 
 function listItems(params = {}) {
-  return mockStore.getItems(params.q || "");
+  if (typeof params === "string") {
+    return mockStore.getItems(params, { status: "all" });
+  }
+
+  return mockStore.getItems(params.q || "", { status: params.status || "all" });
 }
 
 function getItem(id) {
@@ -21,7 +25,19 @@ function markItemStatus(id, status) {
 }
 
 function deleteItem(id) {
-  return markItemStatus(id, "off_shelf");
+  return mockStore.deleteItem(id);
+}
+
+function favoriteItem(id) {
+  return mockStore.favoriteItem(id);
+}
+
+function unfavoriteItem(id) {
+  return mockStore.unfavoriteItem(id);
+}
+
+function listFavoriteItems() {
+  return mockStore.listFavoriteItems();
 }
 
 function isItemOwner(item) {
@@ -34,9 +50,12 @@ module.exports = {
   itemStatuses: mockStore.itemStatuses,
   createItem,
   deleteItem,
+  favoriteItem,
   getItem,
   isItemOwner,
+  listFavoriteItems,
   listItems,
   markItemStatus,
+  unfavoriteItem,
   updateItem
 };

@@ -1,4 +1,5 @@
 const ITEMS_KEY = "youwu_items_v1";
+const FAVORITES_KEY = "youwu_item_favorites_v1";
 const USER_KEY = "youwu_mock_user_v1";
 
 const itemStatuses = [
@@ -162,6 +163,7 @@ function normalizeItem(item) {
     status_label: labelOf(itemStatuses, item.status || "available"),
     category_label: labelOf(categories, item.category || "other"),
     condition_label: labelOf(conditions, item.condition || "good"),
+    is_favorited: isFavoriteItem(item.id),
     images: item.images || (item.cover_image_url ? [item.cover_image_url] : [])
   };
 }
@@ -190,23 +192,25 @@ function sortItemsByLatest(items) {
   ));
 }
 
-function getItems(q) {
+function getItems(q, options = {}) {
   const keyword = (q || "").trim().toLowerCase();
-  const items = sortItemsByLatest(readItems());
+  const status = options.status || "all";
+  const items = sortItemsByLatest(readItems()).filter((item) => (
+    status === "all" ? true : item.status === status
+  ));
 
   if (!keyword) return items;
 
   return items.filter((item) => {
     const text = [
       item.title,
-      item.price,
-      item.dormitory,
-      item.handover_location,
       item.description,
+      item.category,
       item.seller_name,
       item.category_label,
-      item.condition_label,
-      item.status_label
+      item.status_label,
+      item.dormitory,
+      item.handover_location
     ].join(" ").toLowerCase();
     return text.includes(keyword);
   });
@@ -291,6 +295,48 @@ function updateItemStatus(id, status) {
   return updated;
 }
 
+function deleteItem(id) {
+  const items = readItems();
+  const item = items.find((entry) => entry.id === id) || null;
+  if (!item) return null;
+
+  writeItems(items.filter((entry) => entry.id !== id));
+  unfavoriteItem(id);
+  return item;
+}
+
+function readFavoriteIds() {
+  const saved = wx.getStorageSync(FAVORITES_KEY);
+  return Array.isArray(saved) ? saved : [];
+}
+
+function writeFavoriteIds(ids) {
+  wx.setStorageSync(FAVORITES_KEY, ids);
+}
+
+function isFavoriteItem(id) {
+  return readFavoriteIds().includes(id);
+}
+
+function favoriteItem(id) {
+  const item = getItemById(id);
+  if (!item) return null;
+
+  const ids = readFavoriteIds();
+  if (!ids.includes(id)) writeFavoriteIds([id, ...ids]);
+  return getItemById(id);
+}
+
+function unfavoriteItem(id) {
+  writeFavoriteIds(readFavoriteIds().filter((entry) => entry !== id));
+  return getItemById(id);
+}
+
+function listFavoriteItems() {
+  const favoriteIds = readFavoriteIds();
+  return sortItemsByLatest(readItems().filter((item) => favoriteIds.includes(item.id)));
+}
+
 function getMockUser() {
   return wx.getStorageSync(USER_KEY) || null;
 }
@@ -329,14 +375,18 @@ module.exports = {
   addItem,
   categories,
   conditions,
+  deleteItem,
+  favoriteItem,
   getItemById,
   getItems,
   getMockUser,
   isLoggedIn,
   isItemOwner,
   itemStatuses,
+  listFavoriteItems,
   mockLogin,
   mockLogout,
+  unfavoriteItem,
   updateItem,
   updateItemStatus
 };

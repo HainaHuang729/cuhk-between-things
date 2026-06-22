@@ -59,5 +59,25 @@
     </view>
   </block>
 
+  <view class="section-title">我的收藏</view>
+  <view wx:if="{{!favoriteItems.length}}" class="empty-box">暂无收藏</view>
+  <view
+    wx:for="{{favoriteItems}}"
+    wx:key="id"
+    class="profile-item"
+    hover-class="profile-item-hover"
+    data-id="{{item.id}}"
+    bindtap="goItem"
+  >
+    <view class="profile-item-main">
+      <view class="profile-item-title">{{item.title}}</view>
+      <view class="muted">{{item.seller_name}} · {{item.dormitory}}</view>
+    </view>
+    <view class="profile-item-side">
+      <view class="profile-price">{{item.price}}元</view>
+      <view class="profile-status status-{{item.status}}">{{item.status_label}}</view>
+    </view>
+  </view>
+
   <view wx:if="{{!user.id}}" class="primary-button" bindtap="goLogin">模拟登录</view>
 </view>
