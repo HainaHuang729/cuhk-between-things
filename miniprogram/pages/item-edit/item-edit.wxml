@@ -9,10 +9,12 @@
     <picker mode="selector" range="{{conditions}}" range-key="label" bindchange="onConditionChange">
       <view class="field">{{conditionLabel}}</view>
     </picker>
-    <input class="field" name="dormitory" placeholder="宿舍，例如 56座" />
-    <input class="field" name="handover_location" placeholder="交收地点" />
+    <input class="field" name="handover_location" placeholder="地点，例如 56座 / 大学站" />
     <textarea class="field textarea" name="description" placeholder="描述" />
-    <view class="secondary-button" bindtap="chooseImages">选择图片（最多9张）</view>
+    <view class="upload-row" wx:if="{{images.length}}">
+      <image wx:for="{{images}}" wx:key="*this" class="upload-preview" src="{{item}}" mode="aspectFill"></image>
+    </view>
+    <view class="secondary-button" bindtap="chooseImages">上传图片</view>
     <button class="primary-button" form-type="submit">提交</button>
   </form>
 </view>

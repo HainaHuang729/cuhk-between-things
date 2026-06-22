@@ -15,6 +15,7 @@
       <view class="item-photo">
         <image wx:if="{{item.cover_image_url}}" src="{{item.cover_image_url}}" mode="aspectFill"></image>
         <view wx:else class="item-fallback"></view>
+        <view class="status-badge status-{{item.status}}">{{item.status_label}}</view>
       </view>
       <view class="item-info">
         <view class="item-title">{{item.title}}</view>

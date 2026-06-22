@@ -5,11 +5,13 @@
   </view>
 
   <view class="card">
-    <view class="card-title">{{item.title}}</view>
+    <view class="detail-title-row">
+      <view class="card-title">{{item.title}}</view>
+      <view class="detail-status status-{{item.status}}">{{item.status_label}}</view>
+    </view>
     <view class="price">{{item.price}}元</view>
-    <view class="muted">{{item.category}} · {{item.condition}} · {{item.dormitory}}</view>
+    <view class="muted">{{item.category_label}} · {{item.condition_label}} · {{item.dormitory}}</view>
     <view class="muted">{{item.handover_location}}</view>
-    <view class="badge">{{item.status_label || '在售'}}</view>
   </view>
 
   <view class="card">
@@ -17,21 +19,21 @@
     <view>{{item.description}}</view>
   </view>
 
-  <view class="card">
+  <view class="card contact-panel">
     <view class="section-title">联系卖家</view>
     <view wx:if="{{contact.wechat_id}}">
       <view class="muted">微信号</view>
-      <view class="card-title">{{contact.wechat_id}}</view>
+      <view class="wechat-id">{{contact.wechat_id}}</view>
       <view class="primary-button" bindtap="copyWechat">复制微信号</view>
     </view>
     <view wx:else>
       <view class="muted">登录后查看联系方式</view>
-      <view class="primary-button" bindtap="goLogin">CUHK邮箱登录</view>
+      <view class="primary-button" bindtap="goLogin">模拟登录</view>
     </view>
   </view>
 
   <view class="actions">
-    <view class="secondary-button" bindtap="goReport">举报</view>
-    <view class="primary-button" bindtap="shareHint">分享到微信群</view>
+    <view class="secondary-button" bindtap="reportItem">举报</view>
+    <view class="primary-button" bindtap="copyShareText">复制分享文案</view>
   </view>
 </view>

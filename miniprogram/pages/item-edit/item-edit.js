@@ -1,23 +1,4 @@
-const { request } = require("../../utils/request");
-
-const categories = [
-  { value: "electronics", label: "电子产品" },
-  { value: "furniture", label: "家具" },
-  { value: "dorm", label: "宿舍用品" },
-  { value: "kitchen", label: "厨房用品" },
-  { value: "textbook", label: "教材" },
-  { value: "clothing", label: "衣物" },
-  { value: "sports", label: "运动用品" },
-  { value: "other", label: "其他" }
-];
-
-const conditions = [
-  { value: "new", label: "全新" },
-  { value: "like_new", label: "几乎全新" },
-  { value: "good", label: "良好" },
-  { value: "usable", label: "可用" },
-  { value: "flawed", label: "有瑕疵" }
-];
+const { addItem, categories, conditions, getMockUser } = require("../../utils/mock-store");
 
 Page({
   data: {
@@ -44,27 +25,35 @@ Page({
     wx.chooseMedia({
       count: 9,
       mediaType: ["image"],
-      success: (res) => this.setData({ images: res.tempFiles })
+      success: (res) => {
+        const images = res.tempFiles.map((file) => file.tempFilePath);
+        this.setData({ images });
+      }
     });
   },
 
-  async submit(event) {
+  submit(event) {
     const values = event.detail.value;
-    try {
-      const res = await request({
-        url: "/items",
-        method: "POST",
-        auth: true,
-        data: {
-          ...values,
-          price: Number(values.price),
-          category: categories[this.data.categoryIndex].value,
-          condition: conditions[this.data.conditionIndex].value
-        }
-      });
-      wx.redirectTo({ url: `/pages/item-detail/item-detail?id=${res.data.id}` });
-    } catch (error) {
-      wx.showToast({ title: error.error || "发布失败", icon: "none" });
+
+    if (!values.title || !values.price || !values.handover_location) {
+      wx.showToast({ title: "标题、价格、地点必填", icon: "none" });
+      return;
     }
+
+    const user = getMockUser();
+    addItem({
+      title: values.title.trim(),
+      price: Number(values.price),
+      category: categories[this.data.categoryIndex].value,
+      condition: conditions[this.data.conditionIndex].value,
+      dormitory: values.handover_location.trim(),
+      handover_location: values.handover_location.trim(),
+      description: values.description || "",
+      images: this.data.images,
+      wechat_id: user ? user.wechat_id : "youwu_demo"
+    });
+
+    wx.showToast({ title: "已发布" });
+    wx.reLaunch({ url: "/pages/home/home" });
   }
 });

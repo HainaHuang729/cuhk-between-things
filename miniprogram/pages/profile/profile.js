@@ -1,10 +1,12 @@
+const { getMockUser, mockLogout } = require("../../utils/mock-store");
+
 Page({
   data: {
     user: {}
   },
 
   onShow() {
-    this.setData({ user: wx.getStorageSync("user") || {} });
+    this.setData({ user: getMockUser() || {} });
   },
 
   goLogin() {
@@ -20,8 +22,7 @@ Page({
   },
 
   logout() {
-    wx.removeStorageSync("access_token");
-    wx.removeStorageSync("user");
+    mockLogout();
     getApp().globalData.accessToken = "";
     getApp().globalData.user = null;
     this.setData({ user: {} });

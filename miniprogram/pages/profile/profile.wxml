@@ -2,7 +2,7 @@
   <view class="top-title">我的</view>
   <view class="card">
     <view class="card-title">{{user.email || '未登录'}}</view>
-    <view class="muted">CUHK 邮箱用户</view>
+    <view class="muted">{{user.wechat_id || '本地演示账号'}}</view>
   </view>
 
   <view class="card" bindtap="goNewItem">发布商品</view>
@@ -10,6 +10,6 @@
   <view class="card">我的商品</view>
   <view class="card">我的拼团</view>
 
-  <view wx:if="{{!user.email}}" class="primary-button" bindtap="goLogin">CUHK邮箱登录</view>
+  <view wx:if="{{!user.email}}" class="primary-button" bindtap="goLogin">模拟登录</view>
   <view wx:else class="secondary-button" bindtap="logout">退出登录</view>
 </view>

@@ -2,3 +2,45 @@
   width: 100%;
   height: 100%;
 }
+
+.detail-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.detail-title-row .card-title {
+  flex: 1;
+}
+
+.detail-status {
+  flex: 0 0 auto;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(111, 44, 145, 0.92);
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.status-reserved {
+  background: rgba(255, 140, 0, 0.92);
+}
+
+.status-sold,
+.status-off_shelf {
+  background: rgba(31, 41, 51, 0.76);
+}
+
+.contact-panel {
+  border-color: rgba(111, 44, 145, 0.22);
+  background: #fbf8ff;
+}
+
+.wechat-id {
+  margin: 10rpx 0 18rpx;
+  color: #6F2C91;
+  font-size: 36rpx;
+  font-weight: 900;
+}
