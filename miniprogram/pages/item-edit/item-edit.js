@@ -52,7 +52,6 @@ Page({
   },
 
   onLoad(options) {
-    this.ensureLoggedIn();
     if (!options.id) return;
 
     const item = getItem(options.id);
@@ -96,14 +95,6 @@ Page({
     this.setData({ [`form.${field}`]: event.detail.value });
   },
 
-  ensureLoggedIn() {
-    if (getCurrentUser()) return true;
-
-    wx.showToast({ title: "请先登录后发布", icon: "none" });
-    wx.navigateTo({ url: "/pages/login/login" });
-    return false;
-  },
-
   chooseImages() {
     const remaining = MAX_IMAGES - this.data.images.length;
     if (remaining <= 0) {
@@ -132,7 +123,6 @@ Page({
       return;
     }
 
-    if (!this.ensureLoggedIn()) return;
     const user = getCurrentUser();
     const data = validated.data;
 
@@ -145,7 +135,7 @@ Page({
       handover_location: data.handover_location,
       description: data.description,
       images: this.data.images,
-      wechat_id: user.wechat_id
+      wechat_id: user ? user.wechat_id : "youwu_demo"
     };
 
     wx.showLoading({ title: this.data.isEdit ? "保存中" : "发布中", mask: true });
