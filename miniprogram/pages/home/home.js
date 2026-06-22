@@ -1,4 +1,4 @@
-const { getItems } = require("../../utils/mock-store");
+const { listItems } = require("../../services/item-service");
 
 Page({
   data: {
@@ -21,13 +21,13 @@ Page({
 
   onSearchInput(event) {
     const q = event.detail.value;
-    this.setData({ q, items: getItems(q) });
+    this.setData({ q, items: listItems({ q }) });
   },
 
   loadFeed() {
     this.setData({ loading: true });
     this.setData({
-      items: getItems(this.data.q),
+      items: listItems({ q: this.data.q }),
       loading: false
     });
   },

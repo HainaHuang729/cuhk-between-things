@@ -1,9 +1,9 @@
 const {
-  getItemById,
-  getMockUser,
+  getCurrentUser,
+  getItem,
   isItemOwner,
-  updateItemStatus
-} = require("../../utils/mock-store");
+  markItemStatus
+} = require("../../services/item-service");
 
 function buildShareText(item) {
   return [
@@ -35,7 +35,7 @@ Page({
   },
 
   loadItem(id) {
-    const item = getItemById(id);
+    const item = getItem(id);
     if (!item) {
       wx.showToast({ title: "商品不存在", icon: "none" });
       return;
@@ -53,8 +53,8 @@ Page({
   },
 
   loadContact() {
-    const user = getMockUser();
-    const item = this.data.item.id ? this.data.item : getItemById(this.data.id);
+    const user = getCurrentUser();
+    const item = this.data.item.id ? this.data.item : getItem(this.data.id);
     this.setData({
       isLoggedIn: Boolean(user),
       contact: user && item ? { wechat_id: item.wechat_id || user.wechat_id } : {}
@@ -89,7 +89,7 @@ Page({
   },
 
   updateStatus(status, toastTitle) {
-    const item = updateItemStatus(this.data.id, status);
+    const item = markItemStatus(this.data.id, status);
     if (!item) {
       wx.showToast({ title: "更新失败", icon: "none" });
       return;

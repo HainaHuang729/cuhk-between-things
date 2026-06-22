@@ -1,11 +1,11 @@
 const {
-  addItem,
   categories,
   conditions,
-  getItemById,
-  getMockUser,
+  createItem,
+  getCurrentUser,
+  getItem,
   updateItem
-} = require("../../utils/mock-store");
+} = require("../../services/item-service");
 
 Page({
   data: {
@@ -30,7 +30,7 @@ Page({
   onLoad(options) {
     if (!options.id) return;
 
-    const item = getItemById(options.id);
+    const item = getItem(options.id);
     if (!item) {
       wx.showToast({ title: "商品不存在", icon: "none" });
       return;
@@ -92,7 +92,7 @@ Page({
       return;
     }
 
-    const user = getMockUser();
+    const user = getCurrentUser();
     const payload = {
       title: values.title.trim(),
       price: Number(values.price),
@@ -111,7 +111,7 @@ Page({
     if (this.data.isEdit) {
       updateItem(this.data.itemId, payload);
     } else {
-      addItem(payload);
+      createItem(payload);
     }
 
     wx.hideLoading();

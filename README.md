@@ -22,6 +22,15 @@ API_BASE_URL: "http://localhost:3000/api"
 
 上线前需要替换为 HTTPS 域名，并在微信公众平台配置 request 合法域名。
 
+## Data Mode
+
+当前小程序运行在 local mock mode：
+
+- 商品页面统一调用 `miniprogram/services/item-service.js`。
+- `item-service.js` 内部暂时使用 `miniprogram/utils/mock-store.js` 读写本地 mock 数据。
+- `mock-store.js` 作为 dev/mock 数据源保留，便于离线演示首页浏览、详情查看、发布、编辑、下架和标记已售。
+- 后续接入 Supabase 时，优先替换 `item-service.js` 的内部实现，页面层不需要直接改为调用 Supabase。
+
 ## Web/API
 
 ```bash
