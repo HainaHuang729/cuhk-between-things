@@ -36,6 +36,24 @@ const previewItems = {
     dormitory: "研究生宿舍",
     handover_location: "大堂",
     description: "适合宿舍使用，需自取。"
+  },
+  "mock-item-5": {
+    title: "教材 ECON2011",
+    price: 120,
+    category: "教材",
+    condition: "良好",
+    dormitory: "联合",
+    handover_location: "大学站",
+    description: "少量笔记，整体干净。"
+  },
+  "mock-item-6": {
+    title: "收纳箱两只",
+    price: 35,
+    category: "宿舍用品",
+    condition: "可用",
+    dormitory: "39座",
+    handover_location: "楼下",
+    description: "两个一起出，适合搬宿。"
   }
 };
 

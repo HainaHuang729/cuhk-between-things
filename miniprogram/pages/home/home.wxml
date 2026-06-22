@@ -1,51 +1,26 @@
 <view class="page">
-  <view class="market-grid" wx:if="{{activeType === 'items'}}">
-    <view wx:for="{{items}}" wx:key="id" class="market-tile" data-id="{{item.id}}" bindtap="goItem">
-      <view class="tile-photo">
+  <view class="search-wrap">
+    <input
+      class="search-input"
+      placeholder="搜索商品"
+      value="{{q}}"
+      confirm-type="search"
+      bindinput="onSearchInput"
+      bindconfirm="loadFeed"
+    />
+  </view>
+
+  <view class="market-grid">
+    <view wx:for="{{items}}" wx:key="id" class="item-card" data-id="{{item.id}}" bindtap="goItem">
+      <view class="item-photo">
         <image wx:if="{{item.cover_image_url}}" src="{{item.cover_image_url}}" mode="aspectFill"></image>
-        <view wx:else class="tile-fallback"></view>
+        <view wx:else class="item-fallback"></view>
       </view>
-      <view class="tile-info">
-        <view class="tile-title">{{item.title}}</view>
-        <view class="tile-bottom">
-          <text class="tile-price">HKD {{item.price}}</text>
-          <text class="tile-loc">{{item.dormitory}}</text>
-        </view>
+      <view class="item-info">
+        <view class="item-title">{{item.title}}</view>
+        <view class="item-price">HKD {{item.price}}</view>
+        <view class="item-meta">{{item.dormitory}}</view>
       </view>
     </view>
-  </view>
-
-  <view class="market-grid" wx:if="{{activeType === 'wanted'}}">
-    <view wx:for="{{wantedItems}}" wx:key="id" class="market-tile wanted-tile">
-      <view class="tile-photo wanted-photo"></view>
-      <view class="tile-info">
-        <view class="tile-title">{{item.title}}</view>
-        <view class="tile-bottom">
-          <text class="tile-price">{{item.budget}}</text>
-          <text class="tile-loc">{{item.dormitory}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <view class="market-grid" wx:if="{{activeType === 'groups'}}">
-    <view wx:for="{{groups}}" wx:key="id" class="market-tile group-tile" data-id="{{item.id}}" bindtap="goGroup">
-      <view class="tile-photo group-photo">
-        <view class="group-count">{{item.current_size}}/{{item.target_size}}</view>
-      </view>
-      <view class="tile-info">
-        <view class="tile-title">{{item.title}}</view>
-        <view class="tile-bottom">
-          <text class="tile-price">{{item.source_platform}}</text>
-          <text class="tile-loc">{{item.dormitory}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <view class="bottom-tabs">
-    <view class="bottom-tab {{activeType === 'items' ? 'active' : ''}}" data-type="items" bindtap="setType">二手</view>
-    <view class="bottom-tab {{activeType === 'wanted' ? 'active' : ''}}" data-type="wanted" bindtap="setType">求购</view>
-    <view class="bottom-tab {{activeType === 'groups' ? 'active' : ''}}" data-type="groups" bindtap="setType">拼团</view>
   </view>
 </view>
