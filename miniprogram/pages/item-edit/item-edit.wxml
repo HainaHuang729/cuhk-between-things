@@ -2,7 +2,7 @@
   <view class="top-title">发布商品</view>
   <form class="form" bindsubmit="submit">
     <input class="field" name="title" placeholder="标题，例如 Dell 27寸显示器" />
-    <input class="field" name="price" type="digit" placeholder="价格 HKD" />
+    <input class="field" name="price" type="digit" placeholder="价格 元" />
     <picker mode="selector" range="{{categories}}" range-key="label" bindchange="onCategoryChange">
       <view class="field">{{categoryLabel}}</view>
     </picker>

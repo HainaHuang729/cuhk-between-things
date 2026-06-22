@@ -1,1 +1,4 @@
-/* Page styles are inherited from app.wxss. */
+.detail-image image {
+  width: 100%;
+  height: 100%;
+}

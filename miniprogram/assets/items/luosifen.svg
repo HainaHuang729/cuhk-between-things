@@ -1,0 +1,14 @@
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="800" rx="36" fill="#f8f3ee"/>
+  <rect x="214" y="104" width="372" height="558" rx="42" fill="#f35b2f"/>
+  <rect x="248" y="146" width="304" height="110" rx="24" fill="#ffcc33"/>
+  <rect x="262" y="292" width="276" height="224" rx="32" fill="#fff7e8"/>
+  <path d="M298 414c54-58 151-60 204 0" fill="none" stroke="#8d2f1b" stroke-width="22" stroke-linecap="round"/>
+  <path d="M318 454c46-33 118-34 164 0" fill="none" stroke="#8d2f1b" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="346" cy="382" r="18" fill="#6f2c91"/>
+  <circle cx="454" cy="382" r="18" fill="#6f2c91"/>
+  <rect x="294" y="544" width="212" height="38" rx="19" fill="#ffcc33"/>
+  <text x="400" y="214" text-anchor="middle" font-size="54" font-family="Arial, sans-serif" font-weight="700" fill="#6f2c91">螺蛳粉</text>
+  <text x="400" y="608" text-anchor="middle" font-size="38" font-family="Arial, sans-serif" font-weight="700" fill="#6f2c91">10元</text>
+  <ellipse cx="400" cy="700" rx="250" ry="28" fill="#e7dcd3"/>
+</svg>

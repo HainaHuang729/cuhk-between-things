@@ -1,6 +1,16 @@
 const { request } = require("../../utils/request");
 
 const previewItems = {
+  "mock-item-0": {
+    title: "螺蛳粉",
+    price: 10,
+    category: "其他",
+    condition: "全新",
+    dormitory: "宿舍自取",
+    handover_location: "宿舍楼下",
+    description: "未拆封，10元出。",
+    cover_image_url: "/assets/items/luosifen.svg"
+  },
   "mock-item-1": {
     title: "Dell 27寸显示器",
     price: 500,
@@ -114,7 +124,7 @@ Page({
   onShareAppMessage() {
     const item = this.data.item;
     return {
-      title: `${item.title || "CUHK二手商品"} · HKD ${item.price || ""}`,
+      title: `${item.title || "CUHK二手商品"} · ${item.price || ""}元`,
       path: `/pages/item-detail/item-detail?id=${this.data.id}`
     };
   }

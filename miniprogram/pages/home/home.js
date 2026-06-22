@@ -2,6 +2,14 @@ const { request } = require("../../utils/request");
 
 const previewItems = [
   {
+    id: "mock-item-0",
+    title: "螺蛳粉",
+    price: 10,
+    dormitory: "宿舍自取",
+    handover_location: "宿舍楼下",
+    cover_image_url: "/assets/items/luosifen.svg"
+  },
+  {
     id: "mock-item-1",
     title: "Dell 27寸显示器",
     price: 500,

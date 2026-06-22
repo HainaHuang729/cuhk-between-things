@@ -1,9 +1,12 @@
 <view class="page">
-  <view class="detail-image">商品图片</view>
+  <view class="detail-image">
+    <image wx:if="{{item.cover_image_url}}" src="{{item.cover_image_url}}" mode="aspectFill"></image>
+    <text wx:else>商品图片</text>
+  </view>
 
   <view class="card">
     <view class="card-title">{{item.title}}</view>
-    <view class="price">HKD {{item.price}}</view>
+    <view class="price">{{item.price}}元</view>
     <view class="muted">{{item.category}} · {{item.condition}} · {{item.dormitory}}</view>
     <view class="muted">{{item.handover_location}}</view>
     <view class="badge">{{item.status_label || '在售'}}</view>

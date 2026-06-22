@@ -18,7 +18,7 @@
       </view>
       <view class="item-info">
         <view class="item-title">{{item.title}}</view>
-        <view class="item-price">HKD {{item.price}}</view>
+        <view class="item-price">{{item.price}}元</view>
         <view class="item-meta">{{item.dormitory}}</view>
       </view>
     </view>
