@@ -53,7 +53,7 @@ node scripts/check-miniprogram.cjs
 node --test tests/miniprogram.test.cjs
 ```
 
-第一条校验页面、tab 图标、事件处理函数、跳转引用和所有业务 JS 语法；第二条使用隔离的微信 API mock 测试浏览、发布、图片保存失败重试、编辑权限、联系记录和登录返回等流程，不会读写开发者工具中的试用数据。
+第一条校验页面、tab 图标、事件处理函数、跳转引用和所有业务 JS 语法，同时拦截被 Git 忽略的本地依赖，避免“本机能打开，干净副本缺文件”；第二条使用隔离的微信 API mock 测试浏览、发布、图片保存失败重试、编辑权限、联系记录和登录返回等流程，不会读写开发者工具中的试用数据。
 
 真机体验自测步骤见 [docs/TESTING.md](docs/TESTING.md)。
 

@@ -22,4 +22,14 @@ miniprogram/envList.js
 miniprogram/components/cloudTipModal/
 miniprogram/pages/index/
 miniprogram/pages/example/
-miniprogram/images/
+miniprogram/images/*
+!miniprogram/images/icons/
+miniprogram/images/icons/*
+!miniprogram/images/icons/goods.png
+!miniprogram/images/icons/goods-active.png
+!miniprogram/images/icons/business.png
+!miniprogram/images/icons/business-active.png
+!miniprogram/images/icons/home.png
+!miniprogram/images/icons/home-active.png
+!miniprogram/images/icons/usercenter.png
+!miniprogram/images/icons/usercenter-active.png

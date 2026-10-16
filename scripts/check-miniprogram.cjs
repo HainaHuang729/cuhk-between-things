@@ -7,9 +7,19 @@ const root = path.resolve(__dirname, "../miniprogram");
 const app = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
 const pages = new Set(app.pages);
 const scripts = ["app.js"];
+const repository = path.resolve(root, "..");
+const listed = spawnSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "miniprogram"], {
+  cwd: repository,
+  encoding: "utf8"
+});
+assert.equal(listed.status, 0, `Unable to check repository files: ${listed.stderr || listed.error || "git failed"}`);
+const versionableFiles = new Set(listed.stdout.split("\0").filter(Boolean));
 
 function requireFile(relative) {
-  assert.ok(fs.existsSync(path.join(root, relative)), `Missing file: ${relative}`);
+  const filename = path.join(root, relative);
+  assert.ok(fs.existsSync(filename), `Missing file: ${relative}`);
+  const repositoryPath = path.relative(repository, filename).split(path.sep).join("/");
+  assert.ok(versionableFiles.has(repositoryPath), `Git-ignored dependency would be absent from a clean checkout: ${repositoryPath}`);
 }
 
 for (const page of pages) {
@@ -43,7 +53,7 @@ for (const script of scripts) {
   assert.equal(result.status, 0, `${script}: ${result.stderr || result.error || "syntax check failed"}`);
   const source = fs.readFileSync(filename, "utf8");
   for (const match of source.matchAll(/require\(["'](\.[^"']+)["']\)/g)) {
-    assert.ok(fs.existsSync(path.resolve(path.dirname(filename), `${match[1]}.js`)), `${script}: missing import ${match[1]}`);
+    requireFile(path.relative(root, path.resolve(path.dirname(filename), `${match[1]}.js`)));
   }
   for (const match of source.matchAll(/url:\s*["'`](\/pages\/[^?"'`]+)/g)) {
     assert.ok(pages.has(match[1].slice(1)), `${script}: unregistered route ${match[1]}`);
