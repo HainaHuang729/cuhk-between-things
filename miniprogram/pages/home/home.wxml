@@ -1,3 +1,32 @@
+<template name="market-item">
+  <view
+    class="item-card"
+    hover-class="item-card-hover"
+    data-id="{{item.id}}"
+    bindtap="goItem"
+  >
+    <view class="item-photo">
+      <image
+        wx:if="{{item.cover_image_url && !item.image_error}}"
+        class="item-image"
+        src="{{item.cover_image_url}}"
+        mode="widthFix"
+        lazy-load
+        data-id="{{item.id}}"
+        bindload="onImageLoad"
+        binderror="onImageError"
+      ></image>
+      <view wx:else class="item-fallback" style="height: {{item.placeholder_height || 260}}rpx;">暂无图片</view>
+      <view class="status-badge status-{{item.status}}">{{item.status_label}}</view>
+    </view>
+    <view class="item-info">
+      <view class="item-title">{{item.title}}</view>
+      <view class="item-price">{{item.price}}<text class="price-unit">元</text></view>
+      <view class="item-meta">{{item.seller_name}} · {{item.dormitory}}</view>
+    </view>
+  </view>
+</template>
+
 <view class="page">
   <view class="search-wrap">
     <view class="search-box">
@@ -30,31 +59,13 @@
   </view>
 
   <view wx:else class="market-masonry">
-    <view
-      wx:for="{{items}}"
-      wx:key="id"
-      class="item-card"
-      hover-class="item-card-hover"
-      data-id="{{item.id}}"
-      bindtap="goItem"
-    >
-      <view class="item-photo">
-        <image
-          wx:if="{{item.cover_image_url && !item.image_error}}"
-          class="item-image"
-          src="{{item.cover_image_url}}"
-          mode="widthFix"
-          data-id="{{item.id}}"
-          binderror="onImageError"
-        ></image>
-        <view wx:else class="item-fallback" style="height: {{item.placeholder_height || 260}}rpx;"></view>
-        <view class="status-badge status-{{item.status}}">{{item.status_label}}</view>
-      </view>
-      <view class="item-info">
-        <view class="item-title">{{item.title}}</view>
-        <view class="item-price">{{item.price}}元</view>
-        <view class="item-meta">{{item.seller_name}} · {{item.dormitory}}</view>
-      </view>
+    <view wx:for="{{columns}}" wx:for-item="column" wx:key="id" class="market-column">
+      <template
+        wx:for="{{column.items}}"
+        wx:key="id"
+        is="market-item"
+        data="{{item: item}}"
+      />
     </view>
   </view>
 </view>

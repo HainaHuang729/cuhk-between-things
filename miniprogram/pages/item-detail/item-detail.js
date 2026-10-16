@@ -4,6 +4,7 @@ const {
   favoriteItem,
   getItem,
   isItemOwner,
+  itemStatuses,
   markItemStatus,
   unfavoriteItem
 } = require("../../services/item-service");
@@ -160,6 +161,26 @@ Page({
   markSold() {
     if (!this.ensureOwnerAction()) return;
     this.updateStatus("sold", "已标记售出");
+  },
+
+  manageStatus() {
+    if (!this.ensureOwnerAction()) return;
+    const item = getItem(this.data.id);
+    const choices = itemStatuses.filter((entry) => entry.value !== item.status);
+    wx.showActionSheet({
+      itemList: choices.map((entry) => {
+        if (entry.value === "available") return "恢复在售";
+        if (entry.value === "off_shelf") return "下架商品";
+        return `标记${entry.label}`;
+      }),
+      success: (result) => {
+        const choice = choices[result.tapIndex];
+        if (!choice) return;
+        if (choice.value === "off_shelf") this.offShelf();
+        else if (choice.value === "sold") this.markSold();
+        else this.updateStatus(choice.value, choice.value === "available" ? "已恢复在售" : choice.label);
+      }
+    });
   },
 
   offShelf() {

@@ -13,7 +13,7 @@ const event = (dataset) => ({ currentTarget: { dataset } });
 
 function runtime(savedStorage = []) {
   const h = {
-    storage: new Map(savedStorage), toasts: [], navigation: [], modals: [],
+    storage: new Map(savedStorage), toasts: [], navigation: [], modals: [], actionSheets: [],
     timers: new Map(), tempFiles: new Set(), savedFiles: new Set(), saveCalls: [],
     deferredSaves: [], pages: [{}], app: { globalData: {} }, chosenImages: []
   };
@@ -31,7 +31,9 @@ function runtime(savedStorage = []) {
     showLoading: () => { h.loading = true; },
     hideLoading: () => { h.loading = false; },
     stopPullDownRefresh: () => { h.refreshed = true; },
+    hideKeyboard: () => { h.keyboardHidden = true; },
     showModal: (options) => h.modals.push(options),
+    showActionSheet: (options) => h.actionSheets.push(options),
     previewImage: (options) => { h.preview = options; },
     setClipboardData: (options) => {
       if (h.clipboardFails) return options.fail && options.fail();
@@ -139,6 +141,72 @@ test("首页按时间排序，支持分类搜索、空结果、清空和刷新",
   assert.ok(home.data.items.length > 0);
   home.onPullDownRefresh();
   assert.equal(h.refreshed, true);
+  home.setStatus(event({ status: "sold" }));
+  home.onSearchInput({ detail: { value: "键盘" } });
+  home.onSearchInput({ detail: { value: "" } });
+  assert.equal(home.data.status, "available");
+  assert.ok(home.data.items.length > 0);
+});
+
+test("瀑布流将最新两件放在两列顶部，按图片比例和内容分配后续商品", () => {
+  const h = runtime();
+  const { buildMasonryColumns } = h.load("utils/masonry.js");
+  const items = [
+    { id: "newest", title: "竖图商品", cover_image_url: "tall.jpg" },
+    { id: "second", title: "横图商品", cover_image_url: "wide.jpg" },
+    { id: "third", title: "第三件商品", placeholder_height: 100 },
+    { id: "fourth", title: "第四件商品", placeholder_height: 100 }
+  ];
+  const columns = buildMasonryColumns(items, {
+    "tall.jpg": { width: 300, height: 900 },
+    "wide.jpg": { width: 900, height: 300 }
+  });
+  assert.deepEqual(copy(columns[0].items.map((item) => item.id)), ["newest"]);
+  assert.deepEqual(copy(columns[1].items.map((item) => item.id)), ["second", "third", "fourth"]);
+  assert.equal(columns.flatMap((column) => column.items).length, items.length);
+  const longTitle = "毕业搬宿出一批宿舍用品包含小桌板收纳篮延长线";
+  const byContent = buildMasonryColumns([
+    { id: "long", title: longTitle }, { id: "short", title: "台灯" }, { id: "next", title: "衣架" }
+  ]);
+  assert.equal(byContent[1].items[1].id, "next");
+});
+
+test("图片加载不移动正在浏览的卡片，图片失败、搜索和刷新保持两列一致", () => {
+  const h = runtime();
+  const home = h.page("home");
+  home.onLoad();
+  assert.equal(home.data.columns[0].items[0].id, home.data.items[0].id);
+  assert.equal(home.data.columns[1].items[0].id, home.data.items[1].id);
+  const placements = copy(home.data.columns);
+  const first = home.data.items[0];
+  home.onImageLoad({ ...event({ id: first.id }), detail: { width: 100, height: 500 } });
+  assert.deepEqual(home.data.columns, placements);
+  home.onImageError(event({ id: first.id }));
+  assert.equal(home.data.items[0].image_error, true);
+  const displayed = home.data.columns.flatMap((column) => column.items);
+  assert.equal(displayed.find((item) => item.id === first.id).image_error, true);
+  home.onSearchInput({ detail: { value: "显示器" } });
+  home.onSearchConfirm();
+  assert.equal(h.keyboardHidden, true);
+  assert.equal(home.data.columns.flatMap((column) => column.items).length, home.data.items.length);
+  home.clearSearch();
+  assert.equal(home.data.items.find((item) => item.id === first.id).image_error, true);
+  home.onPullDownRefresh();
+  assert.equal(home.data.items.find((item) => item.id === first.id).image_error, false);
+});
+
+test("未登录也能从我的页进入发布并完成 mock 发布", async () => {
+  const h = runtime();
+  const profile = h.page("profile");
+  profile.onShow();
+  assert.equal(profile.data.user.id, undefined);
+  profile.goNewItem();
+  assert.equal(h.navigation.at(-1).url, "/pages/item-edit/item-edit");
+  const edit = h.page("item-edit");
+  edit.onLoad({});
+  await edit.submit(form());
+  assert.equal(h.items.listItems()[0].title, "试用商品");
+  assert.equal(h.users.isLoggedIn(), false);
 });
 
 test("种子升级保留已有商品、修改内容和收藏", () => {
@@ -385,6 +453,51 @@ test("状态更新同步首页和我的发布，退出登录清除所有本地�
   assert.equal(h.storage.has("access_token"), false);
   assert.equal(profile.data.myItems.length, 0);
   assert.equal(profile.data.contactedItems.length, 0);
+});
+
+test("状态菜单支持预订、取消预订、下架、重新上架和标记已售", () => {
+  const h = runtime();
+  h.users.mockLogin("tester");
+  const detail = h.page("item-detail");
+  detail.onLoad({ id: "mock-item-1" });
+  const choose = (label) => {
+    detail.manageStatus();
+    const sheet = h.actionSheets.at(-1);
+    assert.equal(sheet.itemList.length, 3);
+    const index = sheet.itemList.indexOf(label);
+    assert.ok(index >= 0, `Missing action: ${label}`);
+    sheet.success({ tapIndex: index });
+  };
+  choose("标记已预订");
+  assert.equal(h.items.getItem(detail.data.id).status, "reserved");
+  choose("恢复在售");
+  assert.equal(h.items.getItem(detail.data.id).status, "available");
+  choose("下架商品");
+  assert.equal(h.items.getItem(detail.data.id).status, "available");
+  h.modals.at(-1).success({ confirm: false });
+  assert.equal(h.items.getItem(detail.data.id).status, "available");
+  choose("下架商品");
+  h.modals.at(-1).success({ confirm: true });
+  assert.equal(h.items.getItem(detail.data.id).status, "off_shelf");
+  choose("恢复在售");
+  assert.ok(h.items.listItems({ status: "available" }).some((item) => item.id === detail.data.id));
+  choose("标记已售出");
+  assert.equal(h.items.getItem(detail.data.id).status, "sold");
+});
+
+test("非 owner 无状态菜单，菜单打开后退出登录也不能修改", () => {
+  const h = runtime();
+  h.users.mockLogin("tester");
+  const detail = h.page("item-detail");
+  detail.onLoad({ id: "mock-item-7" });
+  detail.manageStatus();
+  assert.equal(h.actionSheets.length, 0);
+  detail.onLoad({ id: "mock-item-1" });
+  detail.manageStatus();
+  const sheet = h.actionSheets[0];
+  h.users.mockLogout();
+  sheet.success({ tapIndex: sheet.itemList.indexOf("标记已售出") });
+  assert.equal(h.items.getItem("mock-item-1").status, "available");
 });
 
 test("模拟登录从详情返回原页，单独打开时回到我的页", () => {

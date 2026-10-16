@@ -70,18 +70,22 @@
 }
 
 .market-masonry {
-  column-count: 2;
-  column-gap: 18rpx;
+  display: flex;
+  align-items: flex-start;
+  gap: 18rpx;
+}
+
+.market-column {
+  flex: 1;
+  min-width: 0;
 }
 
 .item-card {
-  display: inline-block;
   overflow: hidden;
   width: 100%;
   margin: 0 0 18rpx;
   border-radius: 16rpx;
   background: #ffffff;
-  break-inside: avoid;
   box-shadow: 0 6rpx 18rpx rgba(65, 30, 103, 0.07);
   transition: opacity 120ms ease, transform 120ms ease;
 }
@@ -108,9 +112,9 @@
   width: 100%;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(111, 44, 145, 0.12) 0, rgba(111, 44, 145, 0.12) 54rpx, transparent 56rpx),
-    linear-gradient(135deg, #eee9f5 0%, #d9c8ec 100%);
+  background: #f0edf3;
+  color: #8b8191;
+  font-size: 24rpx;
 }
 
 .status-badge {
@@ -167,6 +171,12 @@
   font-size: 22rpx;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.price-unit {
+  margin-left: 4rpx;
+  font-size: 22rpx;
+  font-weight: 600;
 }
 
 .loading-state,

@@ -9,10 +9,8 @@
   height: 100%;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(111, 44, 145, 0.12) 0, rgba(111, 44, 145, 0.12) 72rpx, transparent 74rpx),
-    linear-gradient(135deg, #eee9f5 0%, #d9c8ec 100%);
-  color: #6F2C91;
+  background: #f0edf3;
+  color: #8b8191;
   font-weight: 800;
 }
 
@@ -80,7 +78,7 @@
 
 .owner-actions {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12rpx;
   margin: 20rpx 0;
 }
