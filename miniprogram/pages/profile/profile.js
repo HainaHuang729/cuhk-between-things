@@ -1,5 +1,5 @@
 const { getContactLogs } = require("../../services/contact-service");
-const { getItem, listFavoriteItems, listItems } = require("../../services/item-service");
+const { getItem, isItemOwner, listFavoriteItems, listItems } = require("../../services/item-service");
 const { getCurrentUser, mockLogout } = require("../../services/user-service");
 
 Page({
@@ -28,7 +28,7 @@ Page({
     }
 
     const items = listItems({ status: "all" });
-    const myItems = items.filter((item) => item.seller_id === user.id || item.owner_id === user.id);
+    const myItems = items.filter(isItemOwner);
     const seen = {};
     const contactedItems = getContactLogs()
       .filter((log) => !log.viewer_id || log.viewer_id === user.id)

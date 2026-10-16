@@ -28,6 +28,7 @@ Page({
     contact: {},
     canViewContact: false,
     isOwner: false,
+    missing: false,
     imageError: false
   },
 
@@ -40,16 +41,25 @@ Page({
     if (this.data.id) this.loadItem(this.data.id);
   },
 
+  onUnload() {
+    clearTimeout(this._returnTimer);
+  },
+
+  goHome() {
+    wx.switchTab({ url: "/pages/home/home" });
+  },
+
   loadItem(id) {
     const item = getItem(id);
     if (!item) {
-      wx.showToast({ title: "商品不存在", icon: "none" });
+      this.setData({ item: {}, contact: {}, canViewContact: false, isOwner: false, missing: true });
       return;
     }
 
     this.setData({
       item,
       isOwner: isItemOwner(item),
+      missing: false,
       imageError: false
     }, () => this.loadContact());
   },
@@ -79,18 +89,35 @@ Page({
   },
 
   copyWechat() {
-    const wechatId = this.data.contact.wechat_id;
-    if (!wechatId) {
+    if (!canViewContact()) {
+      this.loadContact();
       wx.showToast({ title: "登录后查看联系方式", icon: "none" });
+      return;
+    }
+
+    const item = getItem(this.data.id);
+    if (!item) {
+      this.loadItem(this.data.id);
+      return;
+    }
+    const wechatId = item.wechat_id;
+    if (!wechatId) {
+      wx.showToast({ title: "卖家暂未填写微信号", icon: "none" });
       return;
     }
 
     wx.setClipboardData({
       data: wechatId,
       success: () => {
-        logContactView(this.data.id, this.data.item.seller_id);
+        try {
+          logContactView(this.data.id, item.seller_id);
+        } catch (error) {
+          wx.showToast({ title: "已复制，联系记录未保存", icon: "none" });
+          return;
+        }
         wx.showToast({ title: "微信号已复制", icon: "success" });
-      }
+      },
+      fail: () => wx.showToast({ title: "复制失败，请重试", icon: "none" })
     });
   },
 
@@ -99,8 +126,10 @@ Page({
   },
 
   ensureOwnerAction() {
-    if (this.data.isOwner) return true;
+    const item = getItem(this.data.id);
+    if (isItemOwner(item)) return true;
 
+    this.loadItem(this.data.id);
     wx.showToast({ title: "只有发布者可操作", icon: "none" });
     return false;
   },
@@ -137,7 +166,7 @@ Page({
     if (!this.ensureOwnerAction()) return;
     wx.showModal({
       title: "下架商品",
-      content: "下架后仍可在详情页查看，首页会显示已下架状态。",
+      content: "下架后不再出现在默认商品流，可在“我的发布”中查看。",
       confirmText: "下架",
       success: (res) => {
         if (res.confirm) this.updateStatus("off_shelf", "已下架");
@@ -149,37 +178,36 @@ Page({
     if (!this.ensureOwnerAction()) return;
     wx.showModal({
       title: "删除商品",
-      content: "删除后将从本地 mock 列表移除。",
+      content: "删除后无法恢复，确定删除这件商品吗？",
       confirmText: "删除",
       confirmColor: "#c2410c",
       success: (res) => {
-        if (!res.confirm) return;
+        if (!res.confirm || !this.ensureOwnerAction()) return;
 
-        const item = deleteItem(this.data.id);
-        if (!item) {
-          wx.showToast({ title: "删除失败", icon: "none" });
+        try {
+          if (!deleteItem(this.data.id)) throw new Error("删除失败");
+        } catch (error) {
+          wx.showToast({ title: "删除失败，请重试", icon: "none" });
           return;
         }
 
+        this.loadItem(this.data.id);
         wx.showToast({ title: "已删除", icon: "none" });
-        setTimeout(() => {
-          wx.switchTab({ url: "/pages/home/home" });
-        }, 500);
+        this._returnTimer = setTimeout(() => this.goHome(), 500);
       }
     });
   },
 
   updateStatus(status, toastTitle) {
-    const item = markItemStatus(this.data.id, status);
-    if (!item) {
-      wx.showToast({ title: "更新失败", icon: "none" });
+    if (!this.ensureOwnerAction()) return;
+    try {
+      if (!markItemStatus(this.data.id, status)) throw new Error("更新失败");
+    } catch (error) {
+      wx.showToast({ title: "更新失败，请重试", icon: "none" });
       return;
     }
 
-    this.setData({
-      item,
-      isOwner: isItemOwner(item)
-    }, () => this.loadContact());
+    this.loadItem(this.data.id);
     wx.showToast({ title: toastTitle });
   },
 
@@ -196,6 +224,7 @@ Page({
   },
 
   copyShareText() {
+    if (!this.data.item.id) return;
     wx.setClipboardData({
       data: buildShareText(this.data.item),
       success: () => wx.showToast({ title: "文案已复制" })

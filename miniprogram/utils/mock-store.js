@@ -359,6 +359,9 @@ function labelOf(list, value) {
 
 function normalizeItem(item) {
   const sellerId = item.seller_id || item.owner_id || "mock-user";
+  const images = Array.isArray(item.images)
+    ? item.images
+    : (item.cover_image_url ? [item.cover_image_url] : []);
 
   return {
     ...item,
@@ -372,21 +375,25 @@ function normalizeItem(item) {
     condition_label: labelOf(conditions, item.condition || "good"),
     is_favorited: isFavoriteItem(item.id),
     placeholder_height: Number(item.placeholder_height || 260),
-    images: item.images || (item.cover_image_url ? [item.cover_image_url] : [])
+    images,
+    cover_image_url: images[0] || ""
   };
 }
 
 function applySeedDefaults(item) {
   const seed = seedItems.find((entry) => entry.id === item.id);
   if (!seed) return item;
+  const images = Array.isArray(item.images)
+    ? item.images
+    : (item.cover_image_url ? [item.cover_image_url] : seed.images || []);
 
   return {
     ...seed,
     ...item,
-    cover_image_url: item.cover_image_url || seed.cover_image_url,
-    images: item.images && item.images.length ? item.images : seed.images,
+    cover_image_url: images[0] || "",
+    images,
     placeholder_height: item.placeholder_height || seed.placeholder_height,
-    seller_id: item.seller_id || seed.seller_id,
+    seller_id: item.seller_id || item.owner_id || seed.seller_id,
     seller_name: item.seller_name || seed.seller_name,
     wechat_id: item.wechat_id || seed.wechat_id
   };
@@ -465,7 +472,7 @@ function addItem(input) {
   const sellerId = user ? user.id : "mock-user";
   const sellerName = user ? user.display_name : "CUHK Student";
   const item = normalizeItem({
-    id: `local-${Date.now()}`,
+    id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title: input.title,
     price: Number(input.price || 0),
     category: input.category,
@@ -492,6 +499,7 @@ function updateItem(id, input) {
   const items = readItems().map((item) => {
     if (item.id !== id) return item;
 
+    const images = Array.isArray(input.images) ? input.images : item.images;
     updated = normalizeItem({
       ...item,
       title: input.title,
@@ -501,10 +509,8 @@ function updateItem(id, input) {
       dormitory: input.dormitory,
       handover_location: input.handover_location,
       description: input.description,
-      images: input.images && input.images.length ? input.images : item.images,
-      cover_image_url: input.images && input.images.length
-        ? input.images[0]
-        : item.cover_image_url,
+      images,
+      cover_image_url: images[0] || "",
       updated_at: new Date().toISOString()
     });
 

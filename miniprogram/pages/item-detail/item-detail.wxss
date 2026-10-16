@@ -25,6 +25,8 @@
 
 .detail-title-row .card-title {
   flex: 1;
+  min-width: 0;
+  word-break: break-all;
 }
 
 .detail-status {
@@ -112,4 +114,11 @@
   color: #6F2C91;
   font-size: 36rpx;
   font-weight: 900;
+  word-break: break-all;
+}
+.missing-item {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding-top: 80rpx;
 }

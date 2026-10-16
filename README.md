@@ -34,6 +34,23 @@ API_BASE_URL: "http://localhost:3000/api"
 - `mock-store.js` 作为 dev/mock 数据源保留，便于离线演示首页浏览、详情查看、发布、编辑、下架和标记已售。
 - 后续接入 Supabase 时，优先替换 services 内部实现，页面层不需要直接改为调用 Supabase。
 
+本地试用数据保存在各自设备上，不会在同学之间同步。分享文案不会将本地发布的商品同步到另一台手机；举报目前只模拟提交反馈。清理缓存会移除本地商品、收藏、登录状态和保存的图片。
+
+发布图片会先保存为本地持久文件再写入商品数据。图片或 storage 保存失败时保留表单，可以重试。编辑、状态修改和删除都会在 `item-service` 重新检查当前发布者身份。
+
+## Mini Program Checks
+
+无需启动网页端或安装额外依赖：
+
+```bash
+node scripts/check-miniprogram.cjs
+node --test tests/miniprogram.test.cjs
+```
+
+第一条校验页面、tab 图标、事件处理函数、跳转引用和所有业务 JS 语法；第二条使用隔离的微信 API mock 测试浏览、发布、图片保存失败重试、编辑权限、联系记录和登录返回等流程，不会读写开发者工具中的试用数据。
+
+真机体验自测步骤见 [docs/TESTING.md](docs/TESTING.md)。
+
 ## Web/API
 
 ```bash

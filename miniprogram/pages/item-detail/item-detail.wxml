@@ -1,4 +1,9 @@
 <view class="page">
+  <view wx:if="{{missing}}" class="missing-item">
+    <view class="card-title">商品已删除或不存在</view>
+    <view class="secondary-button" bindtap="goHome">返回首页</view>
+  </view>
+  <block wx:elif="{{item.id}}">
   <view class="detail-image" bindtap="previewImages">
     <image
       wx:if="{{item.cover_image_url && !imageError}}"
@@ -46,6 +51,7 @@
       <view class="wechat-id">{{contact.wechat_id}}</view>
       <view class="primary-button" bindtap="copyWechat">复制微信号</view>
     </view>
+    <view wx:elif="{{canViewContact}}" class="muted">卖家暂未填写微信号</view>
     <view wx:else>
       <view class="muted">登录后查看联系方式</view>
       <view class="primary-button" bindtap="goLogin">模拟登录</view>
@@ -56,4 +62,5 @@
     <view class="secondary-button" bindtap="reportItem">举报</view>
     <view class="primary-button" bindtap="copyShareText">复制分享文案</view>
   </view>
+  </block>
 </view>

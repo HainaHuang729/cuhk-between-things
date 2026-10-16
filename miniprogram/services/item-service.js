@@ -17,14 +17,18 @@ function createItem(data) {
 }
 
 function updateItem(id, data) {
+  if (!isItemOwner(getItem(id))) return null;
   return mockStore.updateItem(id, data);
 }
 
 function markItemStatus(id, status) {
+  if (!isItemOwner(getItem(id))) return null;
+  if (!mockStore.itemStatuses.some((entry) => entry.value === status)) return null;
   return mockStore.updateItemStatus(id, status);
 }
 
 function deleteItem(id) {
+  if (!isItemOwner(getItem(id))) return null;
   return mockStore.deleteItem(id);
 }
 

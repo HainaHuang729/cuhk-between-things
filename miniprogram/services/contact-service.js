@@ -1,4 +1,4 @@
-const { getCurrentUser } = require("./user-service");
+const { canViewContact, getCurrentUser } = require("./user-service");
 
 const CONTACT_LOGS_KEY = "youwu_contact_logs_v1";
 
@@ -12,6 +12,7 @@ function writeLogs(logs) {
 }
 
 function logContactView(itemId, targetUserId) {
+  if (!canViewContact()) return null;
   const user = getCurrentUser();
   const log = {
     id: `contact-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
