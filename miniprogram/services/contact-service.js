@@ -1,14 +1,16 @@
 const { canViewContact, getCurrentUser } = require("./user-service");
+const { cloudUserKey, isCloudMode } = require("../utils/cloud-client");
 
 const CONTACT_LOGS_KEY = "youwu_contact_logs_v1";
+const logsKey = () => (isCloudMode() ? `${cloudUserKey()}:contacts` : CONTACT_LOGS_KEY);
 
 function readLogs() {
-  const saved = wx.getStorageSync(CONTACT_LOGS_KEY);
+  const saved = wx.getStorageSync(logsKey());
   return Array.isArray(saved) ? saved : [];
 }
 
 function writeLogs(logs) {
-  wx.setStorageSync(CONTACT_LOGS_KEY, logs);
+  wx.setStorageSync(logsKey(), logs);
 }
 
 function logContactView(itemId, targetUserId) {

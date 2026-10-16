@@ -3,12 +3,14 @@ const {
   deleteItem,
   favoriteItem,
   getItem,
+  getItemContact,
   isItemOwner,
   itemStatuses,
   markItemStatus,
   unfavoriteItem
 } = require("../../services/item-service");
-const { canViewContact } = require("../../services/user-service");
+const { canViewContact, getCurrentUser, isCloudMode } = require("../../services/user-service");
+const { readResult } = require("../../utils/service-result");
 
 function buildShareText(item) {
   return [
@@ -19,7 +21,9 @@ function buildShareText(item) {
     item.handover_location || item.dormitory ? `交收：${item.handover_location || item.dormitory}` : "",
     item.seller_name ? `发布者：${item.seller_name}` : "",
     "点击查看详情"
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 Page({
@@ -27,11 +31,16 @@ Page({
     id: "",
     item: {},
     contact: {},
+    contactError: "",
+    contactLoading: false,
     canViewContact: false,
     isOwner: false,
     missing: false,
     gallery: [],
-    currentImage: 0
+    currentImage: 0,
+    loading: false,
+    error: "",
+    loginLabel: isCloudMode() ? "微信登录" : "模拟登录"
   },
 
   onLoad(options = {}) {
@@ -45,6 +54,7 @@ Page({
   },
 
   onUnload() {
+    this._unloaded = true;
     clearTimeout(this._returnTimer);
   },
 
@@ -53,28 +63,63 @@ Page({
   },
 
   loadItem(id) {
-    const item = getItem(id);
-    if (!item) {
-      this.setData({ item: {}, contact: {}, canViewContact: false, isOwner: false, missing: true, gallery: [], currentImage: 0 });
-      return;
-    }
+    const requestId = (this._loadId = (this._loadId || 0) + 1);
+    this.setData({ loading: true, error: "", contact: {}, canViewContact: false });
+    return readResult(
+      () => getItem(id),
+      (item) => {
+        if (this._unloaded || requestId !== this._loadId) return;
+        this.setData({ loading: false });
+        if (!item || !item.id) {
+          this.setData({
+            item: {},
+            contact: {},
+            canViewContact: false,
+            isOwner: false,
+            missing: true,
+            gallery: [],
+            currentImage: 0
+          });
+          return;
+        }
 
-    const urls = (item.images && item.images.length ? item.images : [item.cover_image_url]).filter(Boolean);
-    const sameGallery = this.data.item.id === item.id
-      && this.data.gallery.length === urls.length
-      && this.data.gallery.every((entry, index) => entry.url === urls[index]);
-    const gallery = urls.map((url, index) => ({
-      index,
-      url,
-      failed: sameGallery ? this.data.gallery[index].failed : false
-    }));
-    this.setData({
-      item,
-      isOwner: isItemOwner(item),
-      missing: false,
-      gallery,
-      currentImage: sameGallery ? this.data.currentImage : 0
-    }, () => this.loadContact());
+        const urls = (item.images && item.images.length ? item.images : [item.cover_image_url]).filter(
+          Boolean
+        );
+        const sameGallery =
+          this.data.item.id === item.id &&
+          this.data.gallery.length === urls.length &&
+          this.data.gallery.every((entry, index) => entry.url === urls[index]);
+        const gallery = urls.map((url, index) => ({
+          index,
+          url,
+          failed: sameGallery ? this.data.gallery[index].failed : false
+        }));
+        this.setData(
+          {
+            item,
+            isOwner: isItemOwner(item),
+            missing: false,
+            gallery,
+            currentImage: sameGallery ? this.data.currentImage : 0
+          },
+          () => this.loadContact()
+        );
+      },
+      (error) => {
+        if (!this._unloaded && requestId === this._loadId)
+          this.setData({
+            loading: false,
+            error: error.message || "加载失败，请重试",
+            contact: {},
+            isOwner: false
+          });
+      }
+    );
+  },
+
+  retryLoad() {
+    return this.loadItem(this.data.id);
   },
 
   onGalleryChange(event) {
@@ -90,7 +135,7 @@ Page({
     const image = this.data.gallery[index];
     if (!image || (url && image.url !== url)) return;
     this.setData({
-      gallery: this.data.gallery.map((entry) => entry.index === index ? { ...entry, failed: true } : entry)
+      gallery: this.data.gallery.map((entry) => (entry.index === index ? { ...entry, failed: true } : entry))
     });
   },
 
@@ -114,11 +159,37 @@ Page({
 
   loadContact() {
     const allowed = canViewContact();
-    const item = this.data.item.id ? this.data.item : getItem(this.data.id);
-    this.setData({
-      canViewContact: allowed,
-      contact: allowed && item ? { wechat_id: item.wechat_id || "" } : {}
-    });
+    const userId = (getCurrentUser() || {}).id;
+    const itemId = this.data.id;
+    const requestId = (this._contactId = (this._contactId || 0) + 1);
+    this.setData({ canViewContact: allowed, contact: {}, contactError: "", contactLoading: allowed });
+    if (!allowed || !this.data.item.id) {
+      this.setData({ contactLoading: false });
+      return;
+    }
+    return readResult(
+      () => getItemContact(this.data.id),
+      (contact) => {
+        if (
+          !this._unloaded &&
+          requestId === this._contactId &&
+          this.data.id === itemId &&
+          canViewContact() &&
+          (getCurrentUser() || {}).id === userId
+        )
+          this.setData({ contact, contactLoading: false });
+      },
+      (error) => {
+        if (this._unloaded || requestId !== this._contactId) return;
+        this.setData({
+          contact: {},
+          canViewContact: canViewContact(),
+          contactLoading: false,
+          contactError: error.message || "联系方式加载失败"
+        });
+        wx.showToast({ title: error.message || "联系方式加载失败，请重试", icon: "none" });
+      }
+    );
   },
 
   copyWechat() {
@@ -128,30 +199,46 @@ Page({
       return;
     }
 
-    const item = getItem(this.data.id);
-    if (!item) {
-      this.loadItem(this.data.id);
-      return;
-    }
-    const wechatId = item.wechat_id;
-    if (!wechatId) {
-      wx.showToast({ title: "卖家暂未填写微信号", icon: "none" });
-      return;
-    }
-
-    wx.setClipboardData({
-      data: wechatId,
-      success: () => {
-        try {
-          logContactView(this.data.id, item.seller_id);
-        } catch (error) {
-          wx.showToast({ title: "已复制，联系记录未保存", icon: "none" });
+    if (this._copying) return;
+    this._copying = true;
+    const userId = getCurrentUser().id;
+    return readResult(
+      () => getItemContact(this.data.id),
+      (contact) => {
+        this._copying = false;
+        if (this._unloaded || !canViewContact() || (getCurrentUser() || {}).id !== userId) return;
+        const item = this.data.item;
+        if (!item) {
+          this.loadItem(this.data.id);
           return;
         }
-        wx.showToast({ title: "微信号已复制", icon: "success" });
+        const wechatId = contact.wechat_id;
+        if (!wechatId) {
+          wx.showToast({ title: "卖家暂未填写微信号", icon: "none" });
+          return;
+        }
+
+        wx.setClipboardData({
+          data: wechatId,
+          success: () => {
+            try {
+              logContactView(this.data.id, item.seller_id);
+            } catch (error) {
+              wx.showToast({ title: "已复制，联系记录未保存", icon: "none" });
+              return;
+            }
+            wx.showToast({ title: "微信号已复制", icon: "success" });
+          },
+          fail: () => wx.showToast({ title: "复制失败，请重试", icon: "none" })
+        });
       },
-      fail: () => wx.showToast({ title: "复制失败，请重试", icon: "none" })
-    });
+      (error) => {
+        this._copying = false;
+        this.loadContact();
+        if (!this._unloaded)
+          wx.showToast({ title: error.message || "联系方式加载失败，请重试", icon: "none" });
+      }
+    );
   },
 
   goLogin() {
@@ -159,7 +246,7 @@ Page({
   },
 
   ensureOwnerAction() {
-    const item = getItem(this.data.id);
+    const item = isCloudMode() ? this.data.item : getItem(this.data.id);
     if (isItemOwner(item)) return true;
 
     this.loadItem(this.data.id);
@@ -173,25 +260,38 @@ Page({
   },
 
   toggleFavorite() {
-    let nextItem;
-    try {
-      const item = getItem(this.data.id);
-      if (!item) {
-        this.loadItem(this.data.id);
-        return;
-      }
-      nextItem = item.is_favorited ? unfavoriteItem(this.data.id) : favoriteItem(this.data.id);
-      if (!nextItem) throw new Error("收藏未保存");
-    } catch (error) {
+    if (this._favoriteBusy) return;
+    this._favoriteBusy = true;
+    const failed = () => {
+      this._favoriteBusy = false;
       wx.showToast({ title: "收藏失败，请重试", icon: "none" });
-      return;
-    }
+    };
+    return readResult(
+      () => getItem(this.data.id),
+      (item) => {
+        if (!item) {
+          this.loadItem(this.data.id);
+          this._favoriteBusy = false;
+          return;
+        }
+        return readResult(
+          () => (item.is_favorited ? unfavoriteItem(this.data.id) : favoriteItem(this.data.id)),
+          (nextItem) => {
+            this._favoriteBusy = false;
+            if (!nextItem) throw new Error("收藏未保存");
+            if (this._unloaded) return;
 
-    this.setData({ item: nextItem });
-    wx.showToast({
-      title: nextItem.is_favorited ? "已收藏" : "已取消收藏",
-      icon: "none"
-    });
+            this.setData({ item: nextItem });
+            wx.showToast({
+              title: nextItem.is_favorited ? "已收藏" : "已取消收藏",
+              icon: "none"
+            });
+          },
+          failed
+        );
+      },
+      failed
+    );
   },
 
   markSold() {
@@ -201,7 +301,7 @@ Page({
 
   manageStatus() {
     if (!this.ensureOwnerAction()) return;
-    const item = getItem(this.data.id);
+    const item = this.data.item;
     const choices = itemStatuses.filter((entry) => entry.value !== item.status);
     wx.showActionSheet({
       itemList: choices.map((entry) => {
@@ -241,31 +341,53 @@ Page({
       success: (res) => {
         if (!res.confirm || !this.ensureOwnerAction()) return;
 
-        try {
-          if (!deleteItem(this.data.id)) throw new Error("删除失败");
-        } catch (error) {
-          wx.showToast({ title: "删除失败，请重试", icon: "none" });
-          return;
-        }
+        if (this._mutating) return;
+        this._mutating = true;
+        return readResult(
+          () => deleteItem(this.data.id),
+          (item) => {
+            if (!item) throw new Error("删除失败");
+            this._mutating = false;
+            if (this._unloaded) return;
 
-        this.loadItem(this.data.id);
-        wx.showToast({ title: "已删除", icon: "none" });
-        this._returnTimer = setTimeout(() => this.goHome(), 500);
+            this.loadItem(this.data.id);
+            wx.showToast({ title: "已删除", icon: "none" });
+            this._returnTimer = setTimeout(() => this.goHome(), 500);
+          },
+          (error) => {
+            this._mutating = false;
+            if (this._unloaded) return;
+            this.setData({ isOwner: isItemOwner(this.data.item), canViewContact: canViewContact() });
+            if (!canViewContact()) this.setData({ contact: {} });
+            wx.showToast({ title: isCloudMode() ? error.message : "删除失败，请重试", icon: "none" });
+          }
+        );
       }
     });
   },
 
   updateStatus(status, toastTitle) {
     if (!this.ensureOwnerAction()) return;
-    try {
-      if (!markItemStatus(this.data.id, status)) throw new Error("更新失败");
-    } catch (error) {
-      wx.showToast({ title: "更新失败，请重试", icon: "none" });
-      return;
-    }
+    if (this._mutating) return;
+    this._mutating = true;
+    return readResult(
+      () => markItemStatus(this.data.id, status),
+      (item) => {
+        if (!item) throw new Error("更新失败");
+        this._mutating = false;
+        if (this._unloaded) return;
 
-    this.loadItem(this.data.id);
-    wx.showToast({ title: toastTitle });
+        this.loadItem(this.data.id);
+        wx.showToast({ title: toastTitle });
+      },
+      (error) => {
+        this._mutating = false;
+        if (this._unloaded) return;
+        this.setData({ isOwner: isItemOwner(this.data.item), canViewContact: canViewContact() });
+        if (!canViewContact()) this.setData({ contact: {} });
+        wx.showToast({ title: isCloudMode() ? error.message : "更新失败，请重试", icon: "none" });
+      }
+    );
   },
 
   reportItem() {

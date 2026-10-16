@@ -3,6 +3,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const { test } = require("node:test");
+const { createDatabase } = require("./helpers/cloud-db.cjs");
+const { createMarket } = require("../cloudfunctions/market/market");
 
 const root = path.resolve(__dirname, "../miniprogram");
 const copy = (value) => JSON.parse(JSON.stringify(value));
@@ -11,11 +13,11 @@ const form = (values = {}) => ({ detail: { value: {
 } } });
 const event = (dataset) => ({ currentTarget: { dataset } });
 
-function runtime(savedStorage = []) {
+function runtime(savedStorage = [], options = {}) {
   const h = {
     storage: new Map(savedStorage), toasts: [], navigation: [], modals: [], actionSheets: [],
     timers: new Map(), tempFiles: new Set(), savedFiles: new Set(), saveCalls: [],
-    deferredSaves: [], pages: [{}], app: { globalData: {} }, chosenImages: []
+    deferredSaves: [], pages: [{}], app: { globalData: {} }, chosenImages: [], cloudCalls: [], uploads: [], definitions: new Map()
   };
   let timerId = 0;
   let fileId = 0;
@@ -26,7 +28,23 @@ function runtime(savedStorage = []) {
       if (h.failStorageKey === key) throw new Error("本地空间不足");
       h.storage.set(key, copy(value));
     },
-    removeStorageSync: (key) => h.storage.delete(key),
+    removeStorageSync: (key) => {
+      if (h.failRemoveKey === key) throw new Error("清除失败");
+      return h.storage.delete(key);
+    },
+    cloud: {
+      init: (config) => { h.cloudInit = config; },
+      callFunction: async ({ data }) => {
+        h.cloudCalls.push(data);
+        if (h.cloudFailure) throw new Error("network error");
+        return { result: await h.cloudCall(data) };
+      },
+      uploadFile: async ({ filePath, cloudPath }) => {
+        h.uploads.push({ filePath, cloudPath });
+        if (h.uploadFails) throw new Error("upload failed");
+        return { fileID: `cloud://test-env.bucket/${cloudPath}` };
+      }
+    },
     showToast: ({ title }) => h.toasts.push(title),
     showLoading: () => { h.loading = true; },
     hideLoading: () => { h.loading = false; },
@@ -69,7 +87,7 @@ function runtime(savedStorage = []) {
       }
     })
   };
-  for (const method of ["navigateTo", "navigateBack", "switchTab"]) {
+  for (const method of ["navigateTo", "navigateBack", "switchTab", "redirectTo"]) {
     wx[method] = (options) => {
       h.navigation.push({ method, ...options });
       if (h.navigationFails && options.fail) options.fail();
@@ -89,15 +107,23 @@ function runtime(savedStorage = []) {
     if (modules.has(filename)) return modules.get(filename).exports;
     const module = { exports: {} };
     modules.set(filename, module);
+    if (relative === "utils/data-mode.js") {
+      module.exports = { mode: options.cloud ? "cloud" : "mock", cloudEnv: options.env === undefined ? "test-env" : options.env, cloudFunction: "market" };
+      return module.exports;
+    }
     const source = fs.readFileSync(filename, "utf8");
     const factory = vm.runInContext(`(function(require, module, exports) {\n${source}\n})`, context, { filename });
     factory((target) => h.load(path.relative(root, path.resolve(path.dirname(filename), `${target}.js`))), module, module.exports);
     return module.exports;
   };
   h.page = (name) => {
-    h.load(`pages/${name}/${name}.js`);
+    if (!h.definitions.has(name)) {
+      h.load(`pages/${name}/${name}.js`);
+      h.definitions.set(name, h.definition);
+    }
+    const definition = h.definitions.get(name);
     return {
-      ...h.definition, data: copy(h.definition.data),
+      ...definition, data: copy(definition.data),
       setData(patch, done) {
         for (const [key, value] of Object.entries(patch)) {
           const parts = key.split(".");
@@ -119,6 +145,272 @@ function runtime(savedStorage = []) {
   h.contacts = h.load("services/contact-service.js");
   return h;
 }
+
+test("草稿允许不完整字段，持久保存图片并恢复；发布后清除", async () => {
+  const h = runtime();
+  const before = h.items.listItems().length;
+  const edit = h.page("item-edit");
+  edit.onLoad();
+  await edit.saveDraft();
+  assert.equal(h.items.getItemDraft(), null);
+  edit.setData({ form: { title: "未写完的电饭锅", price: "", description: "今晚补图", handover_location: "" }, categoryIndex: 3, conditionIndex: 1 });
+  h.chosenImages = ["wxfile://tmp_draft.jpg"];
+  edit.chooseImages();
+  await edit.saveDraft();
+  assert.equal(h.items.listItems().length, before);
+  const draft = h.items.getItemDraft();
+  assert.equal(draft.price, "");
+  assert.ok(h.savedFiles.has(draft.images[0]));
+  const restarted = runtime([...h.storage]);
+  restarted.users.mockLogin("tester");
+  const restored = restarted.page("item-edit");
+  restored.onLoad();
+  restored.onShow();
+  assert.equal(restarted.modals.length, 1);
+  restarted.modals[0].success({ confirm: true });
+  assert.equal(restored.data.form.title, draft.title);
+  assert.equal(restored.data.categoryLabel, "厨房用品");
+  assert.equal(restored.data.conditionLabel, "几乎全新");
+  assert.deepEqual(copy(restored.data.images), copy(draft.images));
+  await restored.submit(form({ title: draft.title }));
+  assert.equal(restarted.items.getItemDraft(), null);
+  assert.equal(restarted.items.listItems().length, before + 1);
+});
+
+test("放弃草稿不改商品，编辑商品不恢复或清除新发布草稿", async () => {
+  const h = runtime();
+  h.users.mockLogin("tester");
+  const draft = h.items.saveItemDraft({ title: "另外一件商品" });
+  const edit = h.page("item-edit");
+  edit.onLoad({ id: "mock-item-1" });
+  assert.equal(h.modals.length, 0);
+  await edit.submit(form());
+  assert.equal(h.items.getItemDraft().title, draft.title);
+  const next = h.page("item-edit");
+  next.onLoad();
+  h.modals[0].success({ confirm: false });
+  assert.equal(h.items.getItemDraft(), null);
+  assert.equal(next.data.form.title, "");
+  assert.equal(h.items.getItem("mock-item-1").title, "试用商品");
+});
+
+test("草稿写入失败可重试，保存期间重复操作和离开页面不误发布", async () => {
+  const h = runtime();
+  const edit = h.page("item-edit");
+  edit.setData({ form: { title: "草稿", price: "", handover_location: "", description: "" } });
+  h.failStorageKey = "youwu_item_draft_v1:mock-user";
+  await edit.saveDraft();
+  assert.equal(edit.data.submitting, false);
+  assert.equal(edit.data.savingDraft, false);
+  assert.equal(h.loading, false);
+  assert.equal(edit.data.form.title, "草稿");
+  h.failStorageKey = "";
+  h.deferSave = true;
+  h.chosenImages = ["wxfile://tmp_pending.jpg"];
+  edit.chooseImages();
+  const pending = edit.saveDraft();
+  await edit.saveDraft();
+  await edit.submit(form());
+  assert.equal(h.saveCalls.length, 1);
+  edit.onUnload();
+  h.deferredSaves[0]();
+  await pending;
+  assert.equal(h.items.getItemDraft(), null);
+  assert.equal(h.items.listItems().some((item) => item.title === "试用商品"), false);
+});
+
+test("草稿按用户隔离，草稿清理失败不会把发布成功误报为失败", async () => {
+  const h = runtime();
+  h.users.mockLogin("tester");
+  h.items.saveItemDraft({ title: "本人的草稿" });
+  h.storage.set("youwu_mock_user_v1", { id: "another-user" });
+  assert.equal(h.items.getItemDraft(), null);
+  h.users.mockLogin("tester");
+  h.failRemoveKey = "youwu_item_draft_v1:mock-user";
+  const edit = h.page("item-edit");
+  await edit.submit(form());
+  assert.equal(h.toasts.at(-1), "已发布，草稿未清除");
+  const count = h.items.listItems().length;
+  await edit.submit(form());
+  assert.equal(h.items.listItems().length, count);
+});
+
+test("拼团发起、加入、退出、成团与取消持久化，权限和人数在服务层校验", () => {
+  const h = runtime();
+  const groups = h.load("services/group-service.js");
+  const data = { title: "纸巾拼团", total_price: "30", target_size: "2", handover_location: "56座", deadline_at: new Date(Date.now() + 86400000).toISOString() };
+  assert.throws(() => groups.createGroup(data), /登录/);
+  h.users.mockLogin("tester");
+  const group = groups.createGroup(data);
+  assert.equal(group.current_size, 1);
+  assert.equal(group.per_person_price, "15.00");
+  assert.throws(() => groups.leaveGroup(group.id), /团长不能退出/);
+  h.storage.set("youwu_mock_user_v1", { id: "friend-a", display_name: "A" });
+  assert.throws(() => groups.cancelGroup(group.id), /只有团长/);
+  assert.equal(groups.joinGroup(group.id).status, "formed");
+  assert.equal(groups.joinGroup(group.id).current_size, 2);
+  h.storage.set("youwu_mock_user_v1", { id: "friend-b" });
+  assert.throws(() => groups.joinGroup(group.id), /人数已满/);
+  h.storage.set("youwu_mock_user_v1", { id: "friend-a" });
+  assert.equal(groups.leaveGroup(group.id).status, "recruiting");
+  h.users.mockLogin("tester");
+  groups.cancelGroup(group.id);
+  const restarted = runtime([...h.storage]);
+  assert.equal(restarted.load("services/group-service.js").getGroup(group.id).status, "cancelled");
+});
+
+test("拼团价格、人数、截止时间校验，失败写入不改变成员或状态", () => {
+  const h = runtime();
+  h.users.mockLogin("tester");
+  const groups = h.load("services/group-service.js");
+  const data = { title: "凑单", total_price: "12.50", target_size: "3", handover_location: "大学站", deadline_at: new Date(Date.now() + 86400000).toISOString() };
+  for (const patch of [{ title: "" }, { total_price: "" }, { total_price: "12.345" }, { target_size: "2.5" }, { target_size: "1" }, { deadline_at: "2020-01-01" }]) assert.throws(() => groups.createGroup({ ...data, ...patch }));
+  const group = groups.createGroup(data);
+  h.storage.set("youwu_mock_user_v1", { id: "friend-a" });
+  h.failStorageKey = "youwu_groups_v1";
+  assert.throws(() => groups.joinGroup(group.id), /空间不足/);
+  assert.equal(groups.getGroup(group.id).current_size, 1);
+  h.failStorageKey = "";
+  const saved = h.storage.get("youwu_groups_v1");
+  saved[0].deadline_at = "2020-01-01T00:00:00Z";
+  assert.equal(groups.getGroup(group.id).status, "expired");
+  assert.throws(() => groups.joinGroup(group.id), /已结束/);
+});
+
+test("拼团页面可发起和返回详情，重复提交不创建第二个团", () => {
+  const h = runtime();
+  h.users.mockLogin("tester");
+  const groups = h.load("services/group-service.js");
+  const edit = h.page("group-edit");
+  edit.onLoad();
+  h.navigationFails = true;
+  const input = { detail: { value: { title: "日用品凑单", total_price: "80", target_size: "4", handover_location: "39座" } } };
+  edit.submit(input);
+  const count = groups.listGroups().length;
+  edit.submit(input);
+  assert.equal(groups.listGroups().length, count);
+  const detail = h.page("group-detail");
+  detail.onLoad({ id: edit._createdId });
+  assert.equal(detail.data.group.is_owner, true);
+  detail.copyWechat();
+  assert.equal(h.clipboard, "tester");
+  detail.cancelGroup();
+  h.modals.at(-1).success({ confirm: false });
+  assert.equal(groups.getGroup(edit._createdId).status, "recruiting");
+  detail.cancelGroup();
+  h.modals.at(-1).success({ confirm: true });
+  assert.equal(detail.data.group.status, "cancelled");
+});
+
+test("两个隔离云客户端可共享商品和状态，云模式不读写 mock 商品", async () => {
+  const { db } = createDatabase();
+  const a = runtime([], { cloud: true });
+  const b = runtime([], { cloud: true });
+  a.cloudCall = createMarket({ db, getOpenId: () => "student-a" });
+  b.cloudCall = createMarket({ db, getOpenId: () => "student-b" });
+  assert.equal(a.users.getCurrentUser(), null);
+  assert.throws(() => a.users.mockLogin("tester"), /模拟身份/);
+  await a.users.login("student_a");
+  const edit = a.page("item-edit");
+  edit.onLoad();
+  a.chosenImages = ["wxfile://tmp_cloud.jpg"];
+  edit.chooseImages();
+  await edit.submit(form());
+  const items = await b.items.listItems({ status: "available" });
+  assert.equal(items.length, 1);
+  assert.equal(items[0].seller_id, "student-a");
+  assert.match(items[0].images[0], /^cloud:\/\//);
+  assert.equal(items[0].wechat_id, undefined);
+  assert.equal(b.users.canViewContact(), false);
+  assert.deepEqual(copy(b.items.getItemContact(items[0].id)), {});
+  const home = b.page("home");
+  await home.loadFeed();
+  assert.equal(home.data.items[0].id, items[0].id);
+  await b.users.login("student_b");
+  assert.equal((await b.items.getItemContact(items[0].id)).wechat_id, "student_a");
+  await assert.rejects(() => b.items.updateItem(items[0].id, form().detail.value), /只有发布者/);
+  const detail = b.page("item-detail");
+  await detail.loadItem(items[0].id);
+  detail.setData({ id: items[0].id });
+  await detail.copyWechat();
+  assert.equal(b.clipboard, "student_a");
+  assert.equal(b.contacts.getContactLogs().length, 1);
+  await a.items.markItemStatus(items[0].id, "sold");
+  await home.loadFeed();
+  assert.equal(home.data.items.length, 0);
+  const profile = a.page("profile");
+  await profile.loadProfile();
+  assert.equal(profile.data.myItems[0].status, "sold");
+  await b.users.mockLogout();
+  assert.equal(b.users.getCurrentUser(), null);
+  assert.equal(a.storage.has("youwu_items_v1"), false);
+  assert.equal(b.storage.has("youwu_items_v1"), false);
+});
+
+test("云首页忽略过时搜索响应，网络失败有重试状态且不混入本地商品", async () => {
+  const h = runtime([], { cloud: true });
+  const pending = [];
+  h.cloudCall = (data) => new Promise((resolve) => pending.push({ data, resolve }));
+  const home = h.page("home");
+  const first = home.updateFeed({ q: "台灯" });
+  const next = home.updateFeed({ q: "显示器" });
+  pending[1].resolve({ ok: true, data: [{ id: "monitor", title: "显示器", price: 100, images: [], status: "available" }] });
+  await next;
+  pending[0].resolve({ ok: true, data: [] });
+  await first;
+  assert.equal(home.data.q, "显示器");
+  assert.equal(home.data.items[0].id, "monitor");
+  h.cloudFailure = true;
+  await home.loadFeed();
+  assert.equal(home.data.loading, false);
+  assert.match(home.data.error, /云服务连接失败/);
+  assert.equal(h.storage.has("youwu_items_v1"), false);
+});
+
+test("云环境缺失、登录失败和图片上传失败不会绕过权限或显示成功", async () => {
+  const missing = runtime([], { cloud: true, env: "" });
+  await assert.rejects(() => missing.items.listItems(), /尚未配置/);
+  const h = runtime([], { cloud: true });
+  h.cloudCall = async () => ({ ok: false, code: "INVALID_INPUT", message: "微信号无效" });
+  const login = h.page("login");
+  login.setData({ wechatId: "invalid" });
+  await login.login();
+  assert.equal(login.data.submitting, false);
+  assert.equal(h.users.getCurrentUser(), null);
+  const { db } = createDatabase();
+  h.cloudCall = createMarket({ db, getOpenId: () => "student-a" });
+  await h.users.login("student_a");
+  const edit = h.page("item-edit");
+  edit.onLoad();
+  h.chosenImages = ["wxfile://tmp_retry.jpg"];
+  edit.chooseImages();
+  h.uploadFails = true;
+  await edit.submit(form());
+  assert.equal(edit.data.submitting, false);
+  assert.equal(h.loading, false);
+  assert.equal((await h.items.listItems()).length, 0);
+  h.uploadFails = false;
+  await edit.submit(form());
+  assert.equal((await h.items.listItems()).length, 1);
+});
+
+test("云端过时鉴权失败响应不会清掉刚重新登录的会话", async () => {
+  const h = runtime([], { cloud: true });
+  const { db } = createDatabase();
+  const backend = createMarket({ db, getOpenId: () => "student-a" });
+  h.cloudCall = backend;
+  await h.users.login("student_a");
+  const key = "youwu_cloud_user_v1:test-env";
+  const firstToken = h.storage.get(key).token;
+  let finish;
+  h.cloudCall = (event) => event.action === "list" ? new Promise((resolve) => { finish = resolve; }) : backend(event);
+  const pending = h.items.listItems({ mine: true });
+  await h.users.login("student_a");
+  assert.notEqual(h.storage.get(key).token, firstToken);
+  finish({ ok: false, code: "AUTH_REQUIRED", message: "登录已失效" });
+  await assert.rejects(() => pending, /登录已失效/);
+  assert.equal(h.users.getCurrentUser().id, "student-a");
+});
 
 test("首页按时间排序，支持分类搜索、空结果、清空和刷新", () => {
   const h = runtime();

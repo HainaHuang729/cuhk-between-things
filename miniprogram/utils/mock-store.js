@@ -3,6 +3,7 @@ const FAVORITES_KEY = "youwu_item_favorites_v1";
 const SEED_VERSION_KEY = "youwu_seed_version_v1";
 const SEED_VERSION = 2;
 const USER_KEY = "youwu_mock_user_v1";
+const DRAFT_KEY = "youwu_item_draft_v1";
 
 const itemStatuses = [
   { value: "available", label: "在售" },
@@ -590,6 +591,35 @@ function getMockUser() {
   return wx.getStorageSync(USER_KEY) || null;
 }
 
+function draftKey() {
+  const user = getMockUser();
+  return `${DRAFT_KEY}:${user ? user.id : "mock-user"}`;
+}
+
+function getItemDraft(key = draftKey()) {
+  const draft = wx.getStorageSync(key);
+  return draft && typeof draft === "object" && !Array.isArray(draft) ? draft : null;
+}
+
+function saveItemDraft(input, key = draftKey()) {
+  const draft = {
+    title: String(input.title || "").slice(0, 120),
+    price: String(input.price || ""),
+    handover_location: String(input.handover_location || ""),
+    description: String(input.description || "").slice(0, 2000),
+    category: categories.some((entry) => entry.value === input.category) ? input.category : "electronics",
+    condition: conditions.some((entry) => entry.value === input.condition) ? input.condition : "good",
+    images: (Array.isArray(input.images) ? input.images : []).filter((image) => typeof image === "string").slice(0, 9),
+    updated_at: new Date().toISOString()
+  };
+  wx.setStorageSync(key, draft);
+  return draft;
+}
+
+function clearItemDraft(key = draftKey()) {
+  wx.removeStorageSync(key);
+}
+
 function isLoggedIn() {
   return Boolean(getMockUser());
 }
@@ -623,11 +653,13 @@ function mockLogout() {
 module.exports = {
   addItem,
   categories,
+  clearItemDraft,
   conditions,
   deleteItem,
   favoriteItem,
   getItemById,
   getItems,
+  getItemDraft,
   getMockUser,
   isLoggedIn,
   isItemOwner,
@@ -635,6 +667,7 @@ module.exports = {
   listFavoriteItems,
   mockLogin,
   mockLogout,
+  saveItemDraft,
   unfavoriteItem,
   updateItem,
   updateItemStatus

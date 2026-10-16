@@ -1,1 +1,14 @@
-/* Page styles are inherited from app.wxss. */
+.form {
+  margin-top: 32rpx;
+}
+.form .field {
+  width: 100%;
+  box-sizing: border-box;
+  height: 88rpx;
+  padding: 0 20rpx;
+}
+.form button {
+  width: 100%;
+  margin: 0;
+  font-size: 30rpx;
+}

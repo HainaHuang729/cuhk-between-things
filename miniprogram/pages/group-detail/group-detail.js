@@ -1,104 +1,98 @@
-const { request } = require("../../utils/request");
-
-const previewGroups = {
-  "mock-group-1": {
-    title: "Costco纸巾",
-    current_size: 4,
-    target_size: 6,
-    source_platform: "Costco",
-    dormitory: "56座",
-    handover_location: "伍宜孙56座大堂",
-    description: "凑一箱纸巾，到货后宿舍楼下分。"
-  },
-  "mock-group-2": {
-    title: "IKEA拼车",
-    current_size: 2,
-    target_size: 4,
-    source_platform: "IKEA",
-    dormitory: "23座",
-    handover_location: "23座门口",
-    description: "周末去 IKEA，凑车费。"
-  }
-};
+const { getGroup, joinGroup, leaveGroup, cancelGroup } = require("../../services/group-service");
+const { canViewContact } = require("../../services/user-service");
 
 Page({
-  data: {
-    id: "",
-    group: {},
-    contact: {}
+  data: { id: "", group: null, contact: {}, error: "" },
+  onLoad(options = {}) {
+    this.setData({ id: options.id || "" });
+    this.loadGroup();
   },
-
-  onLoad(options) {
-    this.setData({ id: options.id });
-    this.loadGroup(options.id);
-    this.loadContact(options.id);
+  onShow() {
+    if (this.data.id) this.loadGroup();
   },
-
-  async loadGroup(id) {
-    if (previewGroups[id]) {
-      this.setData({ group: previewGroups[id] });
+  loadGroup() {
+    try {
+      const group = getGroup(this.data.id);
+      this.setData({
+        group,
+        error: group ? "" : "拼团已不存在",
+        contact: canViewContact() && group ? { wechat_id: group.wechat_id } : {}
+      });
+    } catch (error) {
+      this.setData({ error: "加载失败，请重试", contact: {} });
+    }
+  },
+  act(action, title) {
+    if (!canViewContact()) {
+      this.goLogin();
       return;
     }
-
     try {
-      const res = await request({ url: `/groups/${id}` });
-      this.setData({ group: res.data || {} });
+      action(this.data.id);
+      this.loadGroup();
+      wx.showToast({ title, icon: "success" });
     } catch (error) {
-      wx.showToast({ title: error.error || "加载失败", icon: "none" });
+      this.loadGroup();
+      wx.showToast({ title: error.message || "操作失败，请重试", icon: "none" });
     }
   },
-
-  async loadContact(id) {
-    try {
-      const res = await request({ url: `/groups/${id}/contact`, auth: true });
-      this.setData({ contact: res.data || {} });
-    } catch (_error) {
-      this.setData({ contact: {} });
-    }
+  joinGroup() {
+    this.act(joinGroup, "已加入拼团");
   },
-
-  async joinGroup() {
-    try {
-      await request({ url: `/groups/${this.data.id}/join`, method: "POST", auth: true });
-      wx.showToast({ title: "已加入" });
-      this.loadGroup(this.data.id);
-    } catch (error) {
-      wx.showToast({ title: error.error || "加入失败", icon: "none" });
-    }
+  leaveGroup() {
+    this.act(leaveGroup, "已退出拼团");
   },
-
-  async leaveGroup() {
-    try {
-      await request({ url: `/groups/${this.data.id}/leave`, method: "POST", auth: true });
-      wx.showToast({ title: "已退出" });
-      this.loadGroup(this.data.id);
-    } catch (error) {
-      wx.showToast({ title: error.error || "退出失败", icon: "none" });
-    }
+  cancelGroup() {
+    wx.showModal({
+      title: "取消拼团",
+      content: "取消后不能恢复，确定取消吗？",
+      confirmText: "取消拼团",
+      confirmColor: "#b42318",
+      success: (result) => {
+        if (result.confirm) this.act(cancelGroup, "拼团已取消");
+      }
+    });
   },
-
   copyWechat() {
-    wx.setClipboardData({ data: this.data.contact.wechat_id });
+    this.loadGroup();
+    if (!canViewContact()) {
+      this.goLogin();
+      return;
+    }
+    if (!this.data.contact.wechat_id) {
+      wx.showToast({ title: "团长暂未填写微信号", icon: "none" });
+      return;
+    }
+    wx.setClipboardData({
+      data: this.data.contact.wechat_id,
+      success: () => wx.showToast({ title: "微信号已复制" }),
+      fail: () => wx.showToast({ title: "复制失败，请重试", icon: "none" })
+    });
   },
-
   goLogin() {
     wx.navigateTo({ url: "/pages/login/login" });
   },
-
-  goReport() {
-    wx.navigateTo({
-      url: `/pages/report/report?target_type=group&target_id=${this.data.id}`
+  copyShareText() {
+    const group = this.data.group;
+    if (!group) return;
+    wx.setClipboardData({
+      data: [
+          "有物之间 · CUHK拼团（本机试用）",
+        group.title,
+        `人数：${group.current_size}/${group.target_size}`,
+        `每人：${group.per_person_price}元`,
+        `截止：${group.deadline_text}`,
+        `交收：${group.handover_location}`,
+        `状态：${group.status_label}`
+      ].join("\n"),
+      success: () => wx.showToast({ title: "文案已复制" }),
+      fail: () => wx.showToast({ title: "复制失败，请重试", icon: "none" })
     });
   },
-
-  shareHint() {
-    wx.showShareMenu({ withShareTicket: true });
-  },
-
   onShareAppMessage() {
-    const group = this.data.group;
+    const group = this.data.group || {};
     return {
-      title: `${group.title || "CUHK拼团"} · ${group.current_size || 0}/${group.target_size || 0}`,
+      title: `${group.title || "CUHK拼团"} ${group.current_size || 0}/${group.target_size || 0}`,
       path: `/pages/group-detail/group-detail?id=${this.data.id}`
     };
   }

@@ -1,13 +1,18 @@
 const {
   categories,
   conditions,
+  clearItemDraft,
   createItem,
   getItem,
+  getItemDraft,
   isItemOwner,
+  saveItemDraft,
+  saveItemImage,
   updateItem
 } = require("../../services/item-service");
-const { getCurrentUser } = require("../../services/user-service");
+const { getCurrentUser, isCloudMode } = require("../../services/user-service");
 const { saveLocalImage } = require("../../utils/local-image");
+const { readResult } = require("../../utils/service-result");
 
 const MAX_IMAGES = 9;
 
@@ -21,7 +26,8 @@ function validateForm(values) {
   if (!title) errors.title = "请填写商品标题";
   if (!priceText) errors.price = "请填写价格";
   else if (!/^\d+(\.\d{1,2})?$/.test(priceText)) errors.price = "价格只能填写数字，最多两位小数";
-  else if (!Number.isFinite(Number(priceText)) || Number(priceText) <= 0) errors.price = "请填写有效的正数价格";
+  else if (!Number.isFinite(Number(priceText)) || Number(priceText) <= 0)
+    errors.price = "请填写有效的正数价格";
   if (!handoverLocation) errors.handover_location = "请填写交收地点";
   const firstField = Object.keys(errors)[0];
   if (firstField) return { errors, error: errors[firstField], firstField };
@@ -60,48 +66,155 @@ Page({
     unavailableReason: "",
     selectingImages: false,
     submitting: false,
+    savingDraft: false,
+    loading: false,
     errors: {},
     focusField: ""
   },
 
   onLoad(options = {}) {
-    if (!options.id) return;
-
-    this.setData({ itemId: options.id, isEdit: true });
-    const item = getItem(options.id);
-    if (!item) {
-      this.setData({ unavailableReason: "商品已删除或不存在" });
+    if (!options.id) {
+      if (isCloudMode() && !getCurrentUser()) wx.navigateTo({ url: "/pages/login/login" });
+      else this.restoreDraft();
       return;
     }
 
-    if (!isItemOwner(item)) {
-      this.setData({ unavailableReason: "只有发布者可编辑" });
-      return;
-    }
+    this.setData({ itemId: options.id, isEdit: true, loading: true });
+    return readResult(
+      () => getItem(options.id),
+      (item) => {
+        if (this._unloaded) return;
+        this.setData({ loading: false });
+        if (!item) {
+          this.setData({ unavailableReason: "商品已删除或不存在" });
+          return;
+        }
 
-    const categoryIndex = Math.max(0, categories.findIndex((entry) => entry.value === item.category));
-    const conditionIndex = Math.max(0, conditions.findIndex((entry) => entry.value === item.condition));
+        if (!isItemOwner(item)) {
+          this.setData({ unavailableReason: "只有发布者可编辑" });
+          return;
+        }
 
-    this.setData({
-      itemId: item.id,
-      isEdit: true,
-      categoryIndex,
-      conditionIndex,
-      categoryLabel: categories[categoryIndex].label,
-      conditionLabel: conditions[conditionIndex].label,
-      images: item.images || [],
-      form: {
-        title: item.title,
-        price: String(item.price),
-        handover_location: item.handover_location,
-        description: item.description
+        const categoryIndex = Math.max(
+          0,
+          categories.findIndex((entry) => entry.value === item.category)
+        );
+        const conditionIndex = Math.max(
+          0,
+          conditions.findIndex((entry) => entry.value === item.condition)
+        );
+        this._editableItem = item;
+
+        this.setData({
+          itemId: item.id,
+          isEdit: true,
+          categoryIndex,
+          conditionIndex,
+          categoryLabel: categories[categoryIndex].label,
+          conditionLabel: conditions[conditionIndex].label,
+          images: item.images || [],
+          form: {
+            title: item.title,
+            price: String(item.price),
+            handover_location: item.handover_location,
+            description: item.description
+          }
+        });
+      },
+      (error) => {
+        if (!this._unloaded)
+          this.setData({ loading: false, unavailableReason: error.message || "加载失败，请返回重试" });
       }
-    });
+    );
+  },
+
+  onShow() {
+    if (!this.data.isEdit && !this._draftChecked && (!isCloudMode() || getCurrentUser())) this.restoreDraft();
   },
 
   onUnload() {
     this._unloaded = true;
     clearTimeout(this._returnTimer);
+  },
+
+  restoreDraft() {
+    this._draftChecked = true;
+    let draft;
+    try {
+      draft = getItemDraft();
+    } catch (error) {
+      wx.showToast({ title: "草稿读取失败，可继续发布", icon: "none" });
+      return;
+    }
+    if (!draft) return;
+    const userId = (getCurrentUser() || {}).id;
+    wx.showModal({
+      title: "继续上次发布？",
+      content: "有一份未发布的草稿。",
+      confirmText: "继续编辑",
+      cancelText: "重新填写",
+      success: (result) => {
+        if (this._unloaded) return;
+        if ((getCurrentUser() || {}).id !== userId) return;
+        if (!result.confirm) {
+          try {
+            clearItemDraft();
+          } catch (error) {
+            wx.showToast({ title: "草稿清除失败，请重试", icon: "none" });
+          }
+          return;
+        }
+        const categoryIndex = Math.max(
+          0,
+          categories.findIndex((entry) => entry.value === draft.category)
+        );
+        const conditionIndex = Math.max(
+          0,
+          conditions.findIndex((entry) => entry.value === draft.condition)
+        );
+        this.setData({
+          form: {
+            title: draft.title || "",
+            price: draft.price || "",
+            handover_location: draft.handover_location || "",
+            description: draft.description || ""
+          },
+          images: Array.isArray(draft.images) ? draft.images.slice(0, MAX_IMAGES) : [],
+          categoryIndex,
+          conditionIndex,
+          categoryLabel: categories[categoryIndex].label,
+          conditionLabel: conditions[conditionIndex].label
+        });
+      }
+    });
+  },
+
+  async saveDraft() {
+    if (this.data.isEdit || this.data.submitting || this.data.selectingImages || this._saved) return;
+    if (!this.data.images.length && !Object.values(this.data.form).some((value) => String(value).trim())) {
+      wx.showToast({ title: "还没有可保存的内容", icon: "none" });
+      return;
+    }
+    this.setData({ submitting: true, savingDraft: true });
+    const userId = (getCurrentUser() || {}).id;
+    wx.showLoading({ title: "保存草稿", mask: true });
+    try {
+      const images = await this.saveImages(true);
+      if (this._unloaded) return;
+      if ((getCurrentUser() || {}).id !== userId) throw new Error("登录状态已变化，请重新保存草稿");
+      saveItemDraft({
+        ...this.data.form,
+        images,
+        category: categories[this.data.categoryIndex].value,
+        condition: conditions[this.data.conditionIndex].value
+      });
+      wx.showToast({ title: "草稿已保存", icon: "success" });
+    } catch (error) {
+      if (!this._unloaded) wx.showToast({ title: error.message || "草稿保存失败，请重试", icon: "none" });
+    } finally {
+      wx.hideLoading();
+      if (!this._unloaded) this.setData({ submitting: false, savingDraft: false });
+    }
   },
 
   goHome() {
@@ -196,24 +309,31 @@ Page({
   },
 
   canSave() {
+    if (this.data.loading) return false;
     if (this.data.unavailableReason) {
       wx.showToast({ title: this.data.unavailableReason, icon: "none" });
       return false;
     }
-    if (!this.data.isEdit) return true;
+    if (!this.data.isEdit) {
+      if (isCloudMode() && !getCurrentUser()) {
+        wx.navigateTo({ url: "/pages/login/login" });
+        return false;
+      }
+      return true;
+    }
 
-    const item = getItem(this.data.itemId);
+    const item = isCloudMode() ? this._editableItem : getItem(this.data.itemId);
     if (item && isItemOwner(item)) return true;
     this.setData({ unavailableReason: item ? "只有发布者可编辑" : "商品已删除或不存在" });
     wx.showToast({ title: this.data.unavailableReason, icon: "none" });
     return false;
   },
 
-  async saveImages() {
+  async saveImages(localOnly = false) {
     const images = this.data.images.slice();
     for (let index = 0; index < images.length; index += 1) {
       try {
-        images[index] = await saveLocalImage(images[index]);
+        images[index] = await (localOnly ? saveLocalImage(images[index]) : saveItemImage(images[index]));
       } catch (error) {
         throw new Error(`第${index + 1}张图片保存失败，请重新选择`);
       }
@@ -248,6 +368,7 @@ Page({
 
     let saved = false;
     let failureMessage = "";
+    let draftCleared = true;
     try {
       const images = await this.saveImages();
       if (this._unloaded) return;
@@ -259,26 +380,38 @@ Page({
         condition: conditions[this.data.conditionIndex].value,
         dormitory: data.handover_location,
         images,
-        wechat_id: user ? user.wechat_id : "youwu_demo"
+        wechat_id: user ? user.wechat_id : "youwu_demo",
+        request_id:
+          this._requestId ||
+          (this._requestId = `publish-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`)
       };
-      const item = this.data.isEdit
-        ? updateItem(this.data.itemId, payload)
-        : createItem(payload);
+      const item = await (this.data.isEdit ? updateItem(this.data.itemId, payload) : createItem(payload));
       if (!item) throw new Error("商品未保存，请重试");
 
       this._saved = true;
       saved = true;
+      if (!this.data.isEdit && (getCurrentUser() || {}).id === (user || {}).id) {
+        try {
+          clearItemDraft();
+        } catch (error) {
+          draftCleared = false;
+        }
+      }
     } catch (error) {
       failureMessage = error.message || "保存失败，请重试";
     } finally {
       wx.hideLoading();
       if (!saved && !this._unloaded) this.setData({ submitting: false });
     }
+    if (this._unloaded) return;
     if (!saved) {
       wx.showToast({ title: failureMessage, icon: "none" });
       return;
     }
-    wx.showToast({ title: this.data.isEdit ? "保存好了" : "发布成功", icon: "success" });
+    wx.showToast({
+      title: !draftCleared ? "已发布，草稿未清除" : this.data.isEdit ? "保存好了" : "发布成功",
+      icon: draftCleared ? "success" : "none"
+    });
     this._returnTimer = setTimeout(() => this.goHome(), 700);
   }
 });

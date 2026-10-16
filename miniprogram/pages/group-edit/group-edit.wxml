@@ -1,15 +1,17 @@
 <view class="page">
   <view class="top-title">发起拼团</view>
   <form class="form" bindsubmit="submit">
-    <input class="field" name="title" placeholder="标题，例如 Costco纸巾拼团" />
-    <input class="field" name="source_platform" placeholder="来源平台" />
-    <input class="field" name="target_size" type="number" placeholder="目标人数" />
-    <input class="field" name="total_price" type="digit" placeholder="总价，可选" />
-    <input class="field" name="per_person_price" type="digit" placeholder="人均，可选" />
-    <input class="field" name="deadline_at" placeholder="截止时间 ISO，例如 2026-06-22T16:00:00Z" />
-    <input class="field" name="dormitory" placeholder="宿舍，例如 56座" />
-    <input class="field" name="handover_location" placeholder="交收地点" />
-    <textarea class="field textarea" name="description" placeholder="描述" />
-    <button class="primary-button" form-type="submit">提交</button>
+    <input class="field" name="title" maxlength="80" disabled="{{submitting}}" placeholder="标题（必填）" />
+    <input class="field" name="source_platform" maxlength="40" disabled="{{submitting}}" placeholder="来源，例如 Costco、IKEA" />
+    <input class="field" name="target_size" type="number" maxlength="2" disabled="{{submitting}}" placeholder="目标人数，含团长（2至50人）" />
+    <input class="field" name="total_price" type="digit" maxlength="15" disabled="{{submitting}}" placeholder="总价 元（必填）" />
+    <view class="deadline-row">
+      <picker mode="date" value="{{date}}" start="{{minDate}}" disabled="{{submitting}}" bindchange="onDateChange"><view class="field">{{date}}</view></picker>
+      <picker mode="time" value="{{time}}" disabled="{{submitting}}" bindchange="onTimeChange"><view class="field">{{time}} 截止</view></picker>
+    </view>
+    <input class="field" name="handover_location" maxlength="100" disabled="{{submitting}}" placeholder="交收地点（必填）" />
+    <textarea class="field textarea" name="description" maxlength="2000" disabled="{{submitting}}" placeholder="规格、分摊方式、到货时间" />
+    <view wx:if="{{error}}" class="form-error">{{error}}</view>
+    <button class="primary-button" loading="{{submitting}}" disabled="{{submitting}}" form-type="submit">发起拼团</button>
   </form>
 </view>

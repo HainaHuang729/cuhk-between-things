@@ -53,6 +53,11 @@
 
   <view wx:if="{{loading}}" class="loading-state">加载中</view>
 
+  <view wx:elif="{{error}}" class="empty-state">
+    <view class="empty-copy">{{error}}</view>
+    <button class="secondary-button" bindtap="loadFeed">重试</button>
+  </view>
+
   <view wx:elif="{{!items.length}}" class="empty-state">
     <view class="empty-title">{{emptyTitle}}</view>
     <view class="empty-copy">{{emptyCopy}}</view>

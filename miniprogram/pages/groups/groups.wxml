@@ -1,4 +1,7 @@
 <view class="page">
+  <view class="groups-heading"><view><view class="top-title">拼团</view><view class="muted">本机试用数据</view></view><button class="primary-button new-group" bindtap="goNewGroup">发起拼团</button></view>
+  <view wx:if="{{error}}" class="muted" bindtap="loadGroups">{{error}}</view>
+  <view wx:elif="{{!groups.length}}" class="muted">暂无拼团</view>
   <view class="feed">
     <view
       wx:for="{{groups}}"
@@ -10,12 +13,12 @@
     >
       <view class="group-top">
         <view class="group-title">{{item.title}}</view>
-        <view class="group-status">{{item.status_label}}</view>
+        <view class="group-status group-{{item.status}}">{{item.status_label}}</view>
       </view>
       <view class="group-meta">{{item.source_platform}} · {{item.handover_location}}</view>
       <view class="group-bottom">
         <view class="group-count">{{item.current_size}}/{{item.target_size}}</view>
-        <view class="group-deadline">{{item.deadline_text}}</view>
+        <view class="group-deadline">{{item.per_person_price}}元/人</view>
       </view>
     </view>
   </view>

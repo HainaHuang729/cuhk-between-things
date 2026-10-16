@@ -1,1 +1,30 @@
-/* Page styles are inherited from app.wxss. */
+.form {
+  margin-top: 32rpx;
+}
+.field {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+input.field {
+  height: 88rpx;
+  padding: 0 20rpx;
+}
+.deadline-row {
+  display: flex;
+  gap: 16rpx;
+}
+.deadline-row picker {
+  flex: 1;
+  min-width: 0;
+  font-size: 26rpx;
+}
+.form-error {
+  color: #b42318;
+  font-size: 26rpx;
+}
+.form button {
+  width: 100%;
+  margin: 0;
+  font-size: 30rpx;
+}

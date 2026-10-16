@@ -15,8 +15,11 @@
   <view class="profile-actions">
     <view class="primary-button" bindtap="goNewItem">发布商品</view>
     <view wx:if="{{user.id}}" class="secondary-button" bindtap="logout">退出登录</view>
-    <view wx:else class="secondary-button" bindtap="goLogin">模拟登录</view>
+    <view wx:else class="secondary-button" bindtap="goLogin">{{loginLabel}}</view>
   </view>
+
+  <view wx:if="{{loading}}" class="muted">加载中</view>
+  <view wx:if="{{error}}" class="muted" bindtap="loadProfile">{{error}}，点此重试</view>
 
   <block wx:if="{{user.id}}">
     <view class="section-title">我发布的商品</view>

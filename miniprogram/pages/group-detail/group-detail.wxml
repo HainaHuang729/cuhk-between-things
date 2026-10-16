@@ -1,37 +1,33 @@
 <view class="page">
-  <view class="card">
-    <view class="card-title">{{group.title}}</view>
-    <view class="price">当前 {{group.current_size}} / 目标 {{group.target_size}}</view>
-    <view class="muted">{{group.source_platform}} · {{group.dormitory}}</view>
-    <view class="muted">交收：{{group.handover_location}}</view>
-    <view class="badge">{{group.status_label || '招募中'}}</view>
-  </view>
-
-  <view class="card">
-    <view class="section-title">描述</view>
-    <view>{{group.description}}</view>
-  </view>
-
-  <view class="actions">
-    <view class="primary-button" bindtap="joinGroup">加入拼团</view>
-    <view class="secondary-button" bindtap="leaveGroup">退出</view>
-  </view>
-
-  <view class="card">
-    <view class="section-title">联系团长</view>
-    <view wx:if="{{contact.wechat_id}}">
-      <view class="muted">微信号</view>
-      <view class="card-title">{{contact.wechat_id}}</view>
-      <view class="primary-button" bindtap="copyWechat">复制微信号</view>
+  <view wx:if="{{error}}" class="muted" bindtap="loadGroup">{{error}}</view>
+  <block wx:elif="{{group}}">
+    <view class="group-summary">
+      <view class="top-title">{{group.title}}</view>
+      <view class="badge group-{{group.status}}">{{group.status_label}}</view>
+      <view class="group-price">{{group.per_person_price}}<text>元/人</text></view>
+      <view class="muted">总价 {{group.total_price}}元 · {{group.source_platform}}</view>
+      <view class="group-progress">{{group.current_size}} / {{group.target_size}} 人</view>
+      <view class="muted">截止 {{group.deadline_text}}</view>
+      <view class="muted">交收 {{group.handover_location}}</view>
+      <view class="muted">团长 {{group.owner_name}}</view>
     </view>
-    <view wx:else>
-      <view class="muted">登录后查看联系方式</view>
-      <view class="primary-button" bindtap="goLogin">CUHK邮箱登录</view>
+    <view class="group-description">{{group.description || '暂无补充说明'}}</view>
+    <view class="actions">
+      <button wx:if="{{group.is_owner && group.status !== 'cancelled' && group.status !== 'expired'}}" class="secondary-button" bindtap="cancelGroup">取消拼团</button>
+      <button wx:elif="{{group.is_joined && !group.is_owner && (group.status === 'recruiting' || group.status === 'formed')}}" class="secondary-button" bindtap="leaveGroup">退出拼团</button>
+      <button wx:elif="{{!group.is_joined && group.status === 'recruiting'}}" class="primary-button" bindtap="joinGroup">加入拼团</button>
     </view>
-  </view>
-
-  <view class="actions">
-    <view class="secondary-button" bindtap="goReport">举报</view>
-    <view class="primary-button" bindtap="shareHint">分享到微信群</view>
-  </view>
+    <view class="group-contact">
+      <view class="section-title">联系团长</view>
+      <block wx:if="{{contact.wechat_id}}">
+        <view class="wechat-id">{{contact.wechat_id}}</view>
+        <button class="primary-button" bindtap="copyWechat">复制微信号</button>
+      </block>
+      <block wx:else>
+        <view class="muted">登录后查看联系方式</view>
+        <button class="primary-button" bindtap="goLogin">登录</button>
+      </block>
+    </view>
+    <button class="secondary-button" bindtap="copyShareText">复制分享文案</button>
+  </block>
 </view>

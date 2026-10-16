@@ -4,6 +4,7 @@
     <view class="muted">{{unavailableReason}}</view>
     <view class="secondary-button" bindtap="goHome">返回首页</view>
   </view>
+  <view wx:elif="{{loading}}" class="muted">加载中</view>
   <form wx:else class="form" bindsubmit="submit">
     <view class="field-group">
       <input class="field {{errors.title ? 'field-invalid' : ''}}" name="title" value="{{form.title}}" data-field="title" bindinput="onFieldInput" disabled="{{submitting}}" focus="{{focusField === 'title'}}" maxlength="120" placeholder="商品标题（必填）" aria-label="商品标题" />
@@ -31,6 +32,9 @@
       </view>
     </view>
     <button class="secondary-button" bindtap="chooseImages" loading="{{selectingImages}}" disabled="{{submitting || selectingImages}}">上传图片 {{images.length}}/9</button>
-    <button class="primary-button" loading="{{submitting}}" disabled="{{submitting || selectingImages}}" form-type="submit">{{isEdit ? '保存修改' : '发布商品'}}</button>
+    <view class="form-actions">
+      <button wx:if="{{!isEdit}}" class="secondary-button draft-button" bindtap="saveDraft" loading="{{savingDraft}}" disabled="{{submitting || selectingImages}}">存草稿</button>
+      <button class="primary-button" loading="{{submitting && !savingDraft}}" disabled="{{submitting || selectingImages}}" form-type="submit">{{isEdit ? '保存修改' : '发布商品'}}</button>
+    </view>
   </form>
 </view>

@@ -16,7 +16,8 @@ project.private.config.json
 
 # Original Tencent cloud quickstart template kept locally only.
 miniprogram-original-backup-20260622/
-cloudfunctions/
+cloudfunctions/*
+!cloudfunctions/market/
 uploadCloudFunction.sh
 miniprogram/envList.js
 miniprogram/components/cloudTipModal/

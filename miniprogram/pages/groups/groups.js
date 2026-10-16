@@ -1,29 +1,25 @@
-const groups = [
-  {
-    id: "mock-group-1",
-    title: "Costco纸巾拼团",
-    source_platform: "Costco",
-    current_size: 4,
-    target_size: 6,
-    handover_location: "伍宜孙56座大堂",
-    deadline_text: "今晚12点",
-    status_label: "招募中"
-  },
-  {
-    id: "mock-group-2",
-    title: "IKEA周末拼车",
-    source_platform: "IKEA",
-    current_size: 2,
-    target_size: 4,
-    handover_location: "23座门口",
-    deadline_text: "周五18:00",
-    status_label: "招募中"
-  }
-];
+const { listGroups } = require("../../services/group-service");
 
 Page({
   data: {
-    groups
+    groups: [],
+    error: ""
+  },
+
+  onShow() {
+    this.loadGroups();
+  },
+
+  loadGroups() {
+    try {
+      this.setData({ groups: listGroups(), error: "" });
+    } catch (error) {
+      this.setData({ error: "加载失败，请重试" });
+    }
+  },
+
+  goNewGroup() {
+    wx.navigateTo({ url: "/pages/group-edit/group-edit" });
   },
 
   goGroup(event) {

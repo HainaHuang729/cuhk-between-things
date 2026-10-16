@@ -73,3 +73,19 @@
   font-size: 24rpx;
   line-height: 34rpx;
 }
+.form-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.form-actions button {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 16rpx;
+  font-size: 30rpx;
+}
+
+.form-actions .draft-button {
+  flex: 0 0 200rpx;
+}

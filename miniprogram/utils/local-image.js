@@ -1,4 +1,5 @@
 function saveLocalImage(path) {
+  if (path.startsWith("cloud://")) return Promise.resolve(path);
   const userDirectory = wx.env && wx.env.USER_DATA_PATH;
   const isSavedFile = (userDirectory && path.startsWith(`${userDirectory}/`))
     || path.startsWith("wxfile://store_");

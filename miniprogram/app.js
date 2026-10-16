@@ -5,9 +5,10 @@ App({
   },
 
   onLaunch() {
-    const accessToken = wx.getStorageSync("access_token");
-    const user = wx.getStorageSync("user");
+    const accessToken = isCloudMode() ? "" : wx.getStorageSync("access_token");
+    const user = getCurrentUser();
     this.globalData.accessToken = accessToken || "";
     this.globalData.user = user || null;
   }
 });
+const { getCurrentUser, isCloudMode } = require("./services/user-service");
