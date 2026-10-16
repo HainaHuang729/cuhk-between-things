@@ -17,11 +17,14 @@ function validateForm(values) {
   const handoverLocation = (values.handover_location || "").trim();
   const description = (values.description || "").trim();
 
-  if (!title) return { error: "请填写商品标题" };
-  if (!priceText) return { error: "请填写价格" };
-  if (!/^\d+(\.\d{1,2})?$/.test(priceText)) return { error: "价格只能填写数字" };
-  if (!Number.isFinite(Number(priceText)) || Number(priceText) <= 0) return { error: "请填写有效的正数价格" };
-  if (!handoverLocation) return { error: "请填写交收地点" };
+  const errors = {};
+  if (!title) errors.title = "请填写商品标题";
+  if (!priceText) errors.price = "请填写价格";
+  else if (!/^\d+(\.\d{1,2})?$/.test(priceText)) errors.price = "价格只能填写数字，最多两位小数";
+  else if (!Number.isFinite(Number(priceText)) || Number(priceText) <= 0) errors.price = "请填写有效的正数价格";
+  if (!handoverLocation) errors.handover_location = "请填写交收地点";
+  const firstField = Object.keys(errors)[0];
+  if (firstField) return { errors, error: errors[firstField], firstField };
 
   return {
     data: {
@@ -56,7 +59,9 @@ Page({
     isEdit: false,
     unavailableReason: "",
     selectingImages: false,
-    submitting: false
+    submitting: false,
+    errors: {},
+    focusField: ""
   },
 
   onLoad(options = {}) {
@@ -121,7 +126,7 @@ Page({
 
   onFieldInput(event) {
     const field = event.currentTarget.dataset.field;
-    this.setData({ [`form.${field}`]: event.detail.value });
+    this.setData({ [`form.${field}`]: event.detail.value, [`errors.${field}`]: "" });
   },
 
   appendImages(paths) {
@@ -229,10 +234,14 @@ Page({
     const values = event.detail.value;
     const validated = validateForm(values);
     if (validated.error) {
+      this.setData({ errors: validated.errors, focusField: "" }, () => {
+        if (!this._unloaded) this.setData({ focusField: validated.firstField });
+      });
       wx.showToast({ title: validated.error, icon: "none" });
       return;
     }
 
+    this.setData({ errors: {}, focusField: "" });
     const data = validated.data;
     wx.showLoading({ title: this.data.isEdit ? "保存中" : "发布中", mask: true });
     this.setData({ submitting: true });

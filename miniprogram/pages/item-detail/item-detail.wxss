@@ -120,3 +120,27 @@
   gap: 24rpx;
   padding-top: 80rpx;
 }
+
+.detail-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.detail-gallery,
+.gallery-slide {
+  width: 100%;
+  height: 100%;
+}
+
+.gallery-count {
+  position: absolute;
+  right: 16rpx;
+  bottom: 16rpx;
+  padding: 6rpx 14rpx;
+  border-radius: 8rpx;
+  background: rgba(31, 41, 51, 0.76);
+  color: #ffffff;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  pointer-events: none;
+}

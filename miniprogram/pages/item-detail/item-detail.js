@@ -30,12 +30,14 @@ Page({
     canViewContact: false,
     isOwner: false,
     missing: false,
-    imageError: false
+    gallery: [],
+    currentImage: 0
   },
 
-  onLoad(options) {
-    this.setData({ id: options.id });
-    this.loadItem(options.id);
+  onLoad(options = {}) {
+    const id = options.id || "";
+    this.setData({ id });
+    this.loadItem(id);
   },
 
   onShow() {
@@ -53,30 +55,60 @@ Page({
   loadItem(id) {
     const item = getItem(id);
     if (!item) {
-      this.setData({ item: {}, contact: {}, canViewContact: false, isOwner: false, missing: true });
+      this.setData({ item: {}, contact: {}, canViewContact: false, isOwner: false, missing: true, gallery: [], currentImage: 0 });
       return;
     }
 
+    const urls = (item.images && item.images.length ? item.images : [item.cover_image_url]).filter(Boolean);
+    const sameGallery = this.data.item.id === item.id
+      && this.data.gallery.length === urls.length
+      && this.data.gallery.every((entry, index) => entry.url === urls[index]);
+    const gallery = urls.map((url, index) => ({
+      index,
+      url,
+      failed: sameGallery ? this.data.gallery[index].failed : false
+    }));
     this.setData({
       item,
       isOwner: isItemOwner(item),
       missing: false,
-      imageError: false
+      gallery,
+      currentImage: sameGallery ? this.data.currentImage : 0
     }, () => this.loadContact());
   },
 
-  onImageError() {
-    this.setData({ imageError: true });
+  onGalleryChange(event) {
+    const index = Number(event.detail.current);
+    if (Number.isInteger(index) && index >= 0 && index < this.data.gallery.length) {
+      this.setData({ currentImage: index });
+    }
   },
 
-  previewImages() {
-    const item = this.data.item;
-    const urls = (item.images && item.images.length ? item.images : [item.cover_image_url]).filter(Boolean);
-    if (!urls.length) return;
+  onImageError(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    const url = event.currentTarget.dataset.url;
+    const image = this.data.gallery[index];
+    if (!image || (url && image.url !== url)) return;
+    this.setData({
+      gallery: this.data.gallery.map((entry) => entry.index === index ? { ...entry, failed: true } : entry)
+    });
+  },
+
+  previewImages(event = {}) {
+    const requestedIndex = event.currentTarget && event.currentTarget.dataset.index;
+    const index = requestedIndex === undefined ? this.data.currentImage : Number(requestedIndex);
+    const current = this.data.gallery[index];
+    if (!current) return;
+    if (current.failed) {
+      wx.showToast({ title: "图片暂时无法预览", icon: "none" });
+      return;
+    }
+    const urls = this.data.gallery.filter((entry) => !entry.failed).map((entry) => entry.url);
 
     wx.previewImage({
-      current: urls.includes(item.cover_image_url) ? item.cover_image_url : urls[0],
-      urls
+      current: current.url,
+      urls,
+      fail: () => wx.showToast({ title: "图片暂时无法预览", icon: "none" })
     });
   },
 
@@ -141,13 +173,17 @@ Page({
   },
 
   toggleFavorite() {
-    const item = this.data.item;
-    const nextItem = item.is_favorited
-      ? unfavoriteItem(this.data.id)
-      : favoriteItem(this.data.id);
-
-    if (!nextItem) {
-      wx.showToast({ title: "操作失败", icon: "none" });
+    let nextItem;
+    try {
+      const item = getItem(this.data.id);
+      if (!item) {
+        this.loadItem(this.data.id);
+        return;
+      }
+      nextItem = item.is_favorited ? unfavoriteItem(this.data.id) : favoriteItem(this.data.id);
+      if (!nextItem) throw new Error("收藏未保存");
+    } catch (error) {
+      wx.showToast({ title: "收藏失败，请重试", icon: "none" });
       return;
     }
 
@@ -248,7 +284,8 @@ Page({
     if (!this.data.item.id) return;
     wx.setClipboardData({
       data: buildShareText(this.data.item),
-      success: () => wx.showToast({ title: "文案已复制" })
+      success: () => wx.showToast({ title: "文案已复制" }),
+      fail: () => wx.showToast({ title: "复制失败，请重试", icon: "none" })
     });
   },
 

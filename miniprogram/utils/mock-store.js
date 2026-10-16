@@ -545,7 +545,12 @@ function deleteItem(id) {
   if (!item) return null;
 
   writeItems(items.filter((entry) => entry.id !== id));
-  unfavoriteItem(id);
+  try {
+    const favoriteIds = readFavoriteIds();
+    if (favoriteIds.includes(id)) writeFavoriteIds(favoriteIds.filter((entry) => entry !== id));
+  } catch (error) {
+    // Deleted items remain absent from favorites even if optional ID cleanup cannot be saved.
+  }
   return item;
 }
 

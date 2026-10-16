@@ -5,15 +5,24 @@
     <view class="secondary-button" bindtap="goHome">返回首页</view>
   </view>
   <form wx:else class="form" bindsubmit="submit">
-    <input class="field" name="title" value="{{form.title}}" data-field="title" bindinput="onFieldInput" disabled="{{submitting}}" maxlength="120" placeholder="标题，例如 Dell 27寸显示器" />
-    <input class="field" name="price" value="{{form.price}}" data-field="price" bindinput="onFieldInput" disabled="{{submitting}}" type="digit" maxlength="15" placeholder="价格 元，只填数字" />
+    <view class="field-group">
+      <input class="field {{errors.title ? 'field-invalid' : ''}}" name="title" value="{{form.title}}" data-field="title" bindinput="onFieldInput" disabled="{{submitting}}" focus="{{focusField === 'title'}}" maxlength="120" placeholder="商品标题（必填）" aria-label="商品标题" />
+      <view wx:if="{{errors.title}}" class="field-error">{{errors.title}}</view>
+    </view>
+    <view class="field-group">
+      <input class="field {{errors.price ? 'field-invalid' : ''}}" name="price" value="{{form.price}}" data-field="price" bindinput="onFieldInput" disabled="{{submitting}}" focus="{{focusField === 'price'}}" type="digit" maxlength="15" placeholder="价格 元（必填）" aria-label="价格" />
+      <view wx:if="{{errors.price}}" class="field-error">{{errors.price}}</view>
+    </view>
     <picker mode="selector" value="{{categoryIndex}}" range="{{categories}}" range-key="label" bindchange="onCategoryChange" disabled="{{submitting}}">
       <view class="field">{{categoryLabel}}</view>
     </picker>
     <picker mode="selector" value="{{conditionIndex}}" range="{{conditions}}" range-key="label" bindchange="onConditionChange" disabled="{{submitting}}">
       <view class="field">{{conditionLabel}}</view>
     </picker>
-    <input class="field" name="handover_location" value="{{form.handover_location}}" data-field="handover_location" bindinput="onFieldInput" disabled="{{submitting}}" placeholder="地点，例如 56座 / 大学站" />
+    <view class="field-group">
+      <input class="field {{errors.handover_location ? 'field-invalid' : ''}}" name="handover_location" value="{{form.handover_location}}" data-field="handover_location" bindinput="onFieldInput" disabled="{{submitting}}" focus="{{focusField === 'handover_location'}}" placeholder="交收地点（必填）" aria-label="交收地点" />
+      <view wx:if="{{errors.handover_location}}" class="field-error">{{errors.handover_location}}</view>
+    </view>
     <textarea class="field textarea" name="description" value="{{form.description}}" data-field="description" bindinput="onFieldInput" disabled="{{submitting}}" maxlength="2000" placeholder="描述" />
     <view class="upload-row" wx:if="{{images.length}}">
       <view wx:for="{{images}}" wx:key="*this" class="upload-item">
@@ -22,6 +31,6 @@
       </view>
     </view>
     <button class="secondary-button" bindtap="chooseImages" loading="{{selectingImages}}" disabled="{{submitting || selectingImages}}">上传图片 {{images.length}}/9</button>
-    <button class="primary-button" loading="{{submitting}}" disabled="{{submitting || selectingImages}}" form-type="submit">{{isEdit ? '保存' : '提交'}}</button>
+    <button class="primary-button" loading="{{submitting}}" disabled="{{submitting || selectingImages}}" form-type="submit">{{isEdit ? '保存修改' : '发布商品'}}</button>
   </form>
 </view>

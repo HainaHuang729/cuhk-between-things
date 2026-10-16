@@ -48,3 +48,28 @@
   font-size: 36rpx;
   line-height: 1;
 }
+
+.form .field {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form input.field {
+  height: 88rpx;
+  padding: 0 20rpx;
+}
+
+.field-group {
+  min-width: 0;
+}
+
+.field-invalid {
+  border-color: #b42318;
+}
+
+.field-error {
+  margin-top: 8rpx;
+  color: #b42318;
+  font-size: 24rpx;
+  line-height: 34rpx;
+}

@@ -319,6 +319,118 @@ test("必填价格校验、9图上限、取消选择和旧接口回退", async (
   assert.equal(h.preview.current, edit.data.images[0]);
 });
 
+test("表单同时标出必填错误，修改字段只清除对应提示", async () => {
+  const h = runtime();
+  const edit = h.page("item-edit");
+  const before = h.items.listItems().length;
+  await edit.submit(form({ title: "", price: "", handover_location: "" }));
+  assert.equal(edit.data.errors.title, "请填写商品标题");
+  assert.equal(edit.data.errors.price, "请填写价格");
+  assert.equal(edit.data.errors.handover_location, "请填写交收地点");
+  assert.equal(edit.data.focusField, "title");
+  edit.onFieldInput({ ...event({ field: "title" }), detail: { value: "电饭锅" } });
+  assert.equal(edit.data.errors.title, "");
+  assert.equal(edit.data.errors.price, "请填写价格");
+  assert.equal(h.items.listItems().length, before);
+  await edit.submit(form());
+  assert.deepEqual(edit.data.errors, {});
+  assert.equal(h.items.listItems().length, before + 1);
+});
+
+test("详情多图切换后预览当前图片，返回页面保留位置并隔离坏图", () => {
+  const h = runtime();
+  const item = h.items.createItem({ ...form().detail.value, images: [
+    "/assets/items/monitor.svg", "/assets/items/router.svg", "/assets/items/chair.svg"
+  ] });
+  const detail = h.page("item-detail");
+  detail.onLoad({ id: item.id });
+  assert.equal(detail.data.gallery.length, 3);
+  detail.onGalleryChange({ detail: { current: 2 } });
+  detail.previewImages();
+  assert.equal(h.preview.current, item.images[2]);
+  detail.onShow();
+  assert.equal(detail.data.currentImage, 2);
+  detail.onImageError(event({ index: 1 }));
+  assert.equal(detail.data.gallery[1].failed, true);
+  assert.equal(detail.data.gallery[0].failed, false);
+  detail.previewImages();
+  assert.deepEqual(copy(h.preview.urls), [item.images[0], item.images[2]]);
+  detail.onGalleryChange({ detail: { current: 1 } });
+  h.preview = null;
+  detail.previewImages();
+  assert.equal(h.preview, null);
+  assert.match(h.toasts.at(-1), /图片/);
+  h.users.mockLogin("tester");
+  h.items.updateItem(item.id, { ...item, images: [] });
+  detail.onShow();
+  assert.equal(detail.data.gallery.length, 0);
+  assert.equal(detail.data.currentImage, 0);
+  h.items.updateItem(item.id, { ...item, images: [item.images[2]] });
+  detail.onShow();
+  detail.onImageError(event({ index: 0, url: item.images[0] }));
+  assert.equal(detail.data.gallery[0].failed, false);
+  detail.onLoad({});
+  assert.equal(detail.data.missing, true);
+  assert.equal(detail.data.gallery.length, 0);
+});
+
+test("收藏写入失败不改变按钮或数据，重试可收藏和取消", () => {
+  const h = runtime();
+  const detail = h.page("item-detail");
+  detail.onLoad({ id: "mock-item-7" });
+  h.failStorageKey = "youwu_item_favorites_v1";
+  assert.doesNotThrow(() => detail.toggleFavorite());
+  assert.equal(detail.data.item.is_favorited, false);
+  assert.equal(h.items.listFavoriteItems().length, 0);
+  assert.equal(h.toasts.at(-1), "收藏失败，请重试");
+  h.failStorageKey = "";
+  detail.toggleFavorite();
+  assert.equal(detail.data.item.is_favorited, true);
+  h.failStorageKey = "youwu_item_favorites_v1";
+  assert.doesNotThrow(() => detail.toggleFavorite());
+  assert.equal(detail.data.item.is_favorited, true);
+  assert.equal(h.items.listFavoriteItems().length, 1);
+  h.failStorageKey = "";
+  detail.toggleFavorite();
+  assert.equal(h.items.listFavoriteItems().length, 0);
+});
+
+test("删除以商品写入结果为准，收藏清理失败不误报删除失败", () => {
+  const h = runtime();
+  h.users.mockLogin("tester");
+  h.items.favoriteItem("mock-item-1");
+  const detail = h.page("item-detail");
+  detail.onLoad({ id: "mock-item-1" });
+  h.failStorageKey = "youwu_items_v1";
+  detail.removeItem();
+  h.modals.at(-1).success({ confirm: true });
+  assert.ok(h.items.getItem("mock-item-1"));
+  assert.equal(h.items.listFavoriteItems().length, 1);
+  assert.equal(detail.data.missing, false);
+  assert.equal(h.toasts.at(-1), "删除失败，请重试");
+  h.failStorageKey = "youwu_item_favorites_v1";
+  detail.removeItem();
+  h.modals.at(-1).success({ confirm: true });
+  assert.equal(h.items.getItem("mock-item-1"), null);
+  assert.equal(h.items.listFavoriteItems().length, 0);
+  assert.equal(detail.data.missing, true);
+  assert.equal(h.toasts.at(-1), "已删除");
+});
+
+test("分享文案复制失败提示重试，不显示成功", () => {
+  const h = runtime();
+  const detail = h.page("item-detail");
+  detail.onLoad({ id: "mock-item-1" });
+  h.clipboardFails = true;
+  detail.copyShareText();
+  assert.equal(h.toasts.at(-1), "复制失败，请重试");
+  h.clipboardFails = false;
+  detail.copyShareText();
+  assert.match(h.clipboard, /Dell 27寸显示器/);
+  assert.match(h.clipboard, /价格：500元/);
+  assert.equal(h.toasts.at(-1), "文案已复制");
+});
+
 test("编辑可以删除最后一张图片，并保持发布者和状态", async () => {
   const h = runtime();
   h.users.mockLogin("tester");
