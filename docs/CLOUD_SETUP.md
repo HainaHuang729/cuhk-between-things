@@ -2,9 +2,24 @@
 
 ## 当前状态
 
-代码已具备可选的微信云开发商品模式，**默认仍为 mock，尚未部署或完成双真机联调**。
-等待项目拥有者提供 envId。环境 ID 不是 AppSecret；不要将 AppSecret、云密钥、会话 token 写进仓库或聊天。
-本轮不使用 Supabase、不启动 Web，不自动导入本地商品或修改现有云资源。
+目标环境：`cloud1-d4g2uanps066a4efa`。**默认仍为 mock，云资源已部分部署，未完成真实云调用和双真机验收**。
+环境 ID 不是 AppSecret；不要将 AppSecret、云密钥、会话 token 写进仓库或聊天。
+本轮不使用 Supabase、不启动 Web，不自动导入本地商品，不覆盖其他业务资源。
+
+### 实际部署记录（2026-10-16）
+
+- 微信开发者工具已登录；CLI 环境列表确认当前正式项目可访问目标环境。
+- `market` 已通过微信开发者工具 CLI 上传代码并云端安装依赖，部署返回 `success: true`，随后查询为 `Active`。
+- 工具默认创建为 `Nodejs16.13`、超时 3 秒。**运行环境和超时尚待调整**：按下方要求选择受支持的 Node.js LTS，并将超时调至 15 秒后重新验证。
+- 新建 `youwu_items`、`youwu_users`，创建时均选择「所有用户不可读写」。没有导入商品或用户记录，尚未通过小程序客户端验证直接访问被拒绝。
+- 已在 `youwu_items` 创建并从控制台确认三个非唯一索引：`created_at_desc`（created_at 降序）、`status_created_at`（status 升序、created_at 降序）、`seller_created_at`（seller_id 升序、created_at 降序）。
+- 存储管理页提示「存储桶不存在」，初始化操作返回 `ResourceInUse, Current Storage Status Normal Not Allowed`。**不能据此认定图片存储已经可用**；未修改存储权限，未上传图片。
+- 后续界面读取遇到 ScreenCaptureKit `-3812`，未继续提交函数运行参数，也未完成云端 get/list、图片上传及双账号权限联调。
+- 同时修复 `app.js` 在 `App()` 注册后才导入用户服务导致的启动错误。新回归在修复前重现初始化错误，修复后 mock/cloud 两种冷启动通过。
+
+CLI 首次按 `--project` 部署遇到签名错误 `41002`；显式指定本机私有配置中的正式 AppID 后，等待函数从 Creating 变为 Active 再上传成功。公共 AppID 仍是游客占位，本机真实 AppID 未改动或提交。
+
+在存储、运行参数和实际云调用验证完成前，不把 `mode` 改为 `cloud`；本机既有商品、收藏和模拟登录状态保留。
 
 ## 模式范围
 
@@ -33,9 +48,9 @@
 1. 在微信开发者工具中选择目标云环境，记录 envId。
 2. 新建文档型数据库集合 `youwu_users`、`youwu_items`，不要导入 mock seeds。
 3. 对两个集合分别设置自定义安全规则，使用 `cloudfunctions/market/database.rules.json`：客户端禁止直接读写，商品数据仅通过云函数访问。验证开发者工具的客户端数据库直接读写确实被拒绝。
-4. 给 `youwu_items` 建索引：`created_at` 降序；`status` 升序 + `created_at` 降序；`seller_id` 升序 + `created_at` 降序；`seller_id` 升序 + `status` 升序 + `created_at` 降序。`_id` 使用默认唯一索引。若控制台提示其他搜索索引，按实际查询提示补充。
+4. 给 `youwu_items` 建索引：`created_at` 降序；`status` 升序 + `created_at` 降序；`seller_id` 升序 + `created_at` 降序。当前「我的发布」不按状态筛选；未来增加该查询时再添加 `seller_id` 升序 + `status` 升序 + `created_at` 降序。`_id` 使用默认唯一索引。若控制台提示其他搜索索引，按实际查询提示补充，不重复创建已有索引。
 5. 在本项目专用云存储配置中应用 `cloudfunctions/market/storage.rules.json`，公开读、仅创建者写；已有其他业务共用存储时，先合并规则，不能整体替换。验证 B 不能覆盖或删除 A 上传的文件。
-6. 右键 `cloudfunctions/market`，上传并部署，选择云端安装依赖。使用云控制台当前支持的 Node.js LTS 运行环境（本代码要求至少 Node.js 18）；设置合理的超时和限流配额。保留函数名称 `market`。
+6. 右键 `cloudfunctions/market`，上传并部署，选择云端安装依赖。使用云控制台当前支持的 Node.js LTS 运行环境（至少 Node.js 18）；不要沿用 CLI 默认的 Node.js 16。通过「云函数 → market → 版本与配置 → $LATEST 配置」核对可选运行环境，将超时设为 15 秒并验证生效。保留函数名称 `market`，不启用定时或 HTTP 触发器。
 7. 修改 `miniprogram/utils/data-mode.js`，填入实际 envId，并将 `mode` 从 `mock` 改为 `cloud`。这一步是显式启用，不自动切换。
 8. 重新编译。先以未注册业务用户浏览，再分别使用两个微信账号登录。云模式下没有 CUHK 邮箱标签或“模拟登录”权限捷径。
 9. 按下方双真机脚本验收。失败时停留在错误/重试状态，不能自动用 mock 掩盖云连接失败。

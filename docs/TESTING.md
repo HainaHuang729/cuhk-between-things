@@ -180,3 +180,14 @@ node --test tests/miniprogram.test.cjs tests/cloud-market.test.cjs
 依赖审计存在上游告警，详见部署文档；未把“代码可测试”标记为“云端已安全上线”。
 
 ---
+
+## 云环境配置增量（2026-10-16，后续记录）
+
+- 目标环境 `cloud1-d4g2uanps066a4efa` 已写入配置，`mode` 仍是 `mock`。
+- 开发者工具 CLI 已验证可访问该环境；`market` 代码上传和云端安装依赖成功，状态为 Active。
+- 两个云集合采用「所有用户不可读写」权限，商品三个查询索引已创建，未导入 mock 数据。
+- 存储初始化返回 ResourceInUse / Normal，不能视为上传可用；存储规则未修改，图片未上传。
+- 函数当前仍是工具默认 Node.js 16.13 / 3 秒超时；运行环境与超时调整、实际云调用、客户端直接访问拒绝和双真机均待验收。
+- 读取新函数配置时桌面连接返回 `-3812`，没有把未提交的配置记录为成功。
+- 新增 App 冷启动回归，修复前能重现 `Cannot access 'isCloudMode' before initialization`，修复后 mock/cloud 均通过。
+- 最新自动化为 44 项通过；历史段落中的 43 项保留为当时记录。部署详情及后续检查见 [CLOUD_SETUP.md](CLOUD_SETUP.md)。

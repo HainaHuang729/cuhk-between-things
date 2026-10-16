@@ -95,6 +95,10 @@ function runtime(savedStorage = [], options = {}) {
   }
   const context = vm.createContext({
     wx,
+    App: (definition) => {
+      h.app = definition;
+      definition.onLaunch.call(definition);
+    },
     Page: (definition) => { h.definition = definition; },
     getApp: () => h.app,
     getCurrentPages: () => h.pages,
@@ -145,6 +149,24 @@ function runtime(savedStorage = [], options = {}) {
   h.contacts = h.load("services/contact-service.js");
   return h;
 }
+
+test("App 注册时即可读取用户服务，冷启动不会使用尚未初始化的导入", () => {
+  for (const cloud of [false, true]) {
+    const h = runtime([], { cloud });
+    h.storage.set("user", { id: "legacy-user" });
+    h.storage.set("access_token", "mock-access-token");
+    if (cloud) {
+      h.storage.set("youwu_cloud_user_v1:test-env", {
+        user: { id: "cloud-user" }, token: "test-session", expires_at: Date.now() + 60000
+      });
+    } else {
+      h.users.mockLogin("tester");
+    }
+    assert.doesNotThrow(() => h.load("app.js"));
+    assert.equal(h.app.globalData.user.id, cloud ? "cloud-user" : "mock-user");
+    assert.equal(h.app.globalData.accessToken, cloud ? "" : "mock-access-token");
+  }
+});
 
 test("草稿允许不完整字段，持久保存图片并恢复；发布后清除", async () => {
   const h = runtime();

@@ -22,7 +22,7 @@ CUHK 校园交易与资源共享社区。定位是二手交易与拼团信息沉
 - 商品页面统一调用 `miniprogram/services/item-service.js`。
 - 用户登录、退出和联系权限统一调用 `miniprogram/services/user-service.js`。
 - 复制联系方式时通过 `miniprogram/services/contact-service.js` 记录本地联系日志。
-- `item-service.js`、`user-service.js` 和 `contact-service.js` 默认运行在 mock mode；商品的可选云模式代码已就绪，但尚未配置 envId、部署或双真机联调。
+- `item-service.js`、`user-service.js` 和 `contact-service.js` 默认运行在 mock mode；目标 envId 已配置，`market` 云函数、两个私有集合及三个查询索引已部署。存储、运行参数和实际云调用尚未验收，因此未启用 cloud mode，未完成双真机联调。
 - `item-service.js` 和 `user-service.js` 内部暂时使用 `miniprogram/utils/mock-store.js` 读写本地 mock 数据。
 - `mock-store.js` 作为 dev/mock 数据源保留，便于离线演示首页浏览、详情查看、发布、编辑、下架和标记已售。
 - 模式开关是 `miniprogram/utils/data-mode.js`，保持 `mode: "mock"` 即可离线演示。云连接失败不会回退并混入 mock seeds，不自动迁移本机数据。

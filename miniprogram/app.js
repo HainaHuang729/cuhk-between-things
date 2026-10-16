@@ -1,3 +1,5 @@
+const { getCurrentUser, isCloudMode } = require("./services/user-service");
+
 App({
   globalData: {
     accessToken: "",
@@ -11,4 +13,3 @@ App({
     this.globalData.user = user || null;
   }
 });
-const { getCurrentUser, isCloudMode } = require("./services/user-service");

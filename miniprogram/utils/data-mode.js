@@ -1,5 +1,5 @@
 module.exports = {
   mode: "mock",
-  cloudEnv: "",
+  cloudEnv: "cloud1-d4g2uanps066a4efa",
   cloudFunction: "market"
 };
